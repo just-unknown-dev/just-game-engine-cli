@@ -1,0 +1,42 @@
+// What the editor needs from the game, made where a hot reload can redo it.
+//
+// A hot reload swaps the code but runs nothing again, so anything main
+// hands the editor from code would stay as it was at launch. The editor
+// calls EditorWiring.wire after every reload instead, and main uses the
+// same functions.
+//
+// Developer-only, like everything under lib/editor/: lib/main.dart never
+// imports it, so none of it ships.
+//
+// ignore_for_file: depend_on_referenced_packages
+
+import 'package:just_asset_store_editor/just_asset_store_editor.dart';
+import 'package:just_game_engine/just_game_engine.dart';
+import 'package:just_game_engine_editor/just_game_engine_editor.dart';
+
+import '../game/game_boot.dart';
+import 'store_modules.g.dart';
+
+/// The editor's view of the game, for launch and for every hot reload.
+abstract final class EditorWiring {
+  /// The editor's modules.
+  ///
+  /// AssetStoreModule is the Asset Store (the shop button), listed by hand
+  /// so a broken generated file can never take it down. storeModules() is
+  /// every module the installed store items bring
+  /// (lib/editor/store_modules.g.dart, rewritten by `just add`). Your own
+  /// game's module goes here too.
+  static List<EditorModule> modules() => [
+    AssetStoreModule(),
+    ...storeModules(),
+  ];
+
+  /// After a hot reload: the extensions, systems, modules and spawners
+  /// again, from the code as it now is.
+  static void wire(Engine engine, JustGameEditorPlugin plugin) {
+    engine.context.installAll(GameBoot.extensions);
+    GameBoot.addMissingSystems(engine);
+    plugin.syncModules(modules());
+    plugin.scope.spawners.value = GameBoot.spawners;
+  }
+}

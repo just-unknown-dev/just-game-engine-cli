@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "commands": [
+    {
+      "name": "game",
+      "summary": "Run and build the game, check releases hold no editor, manage scenes and migrate saved files."
+    }
+  ],
+  "hooks": {
+    "create": "game init",
+    "doctor": "game doctor",
+    "check": "game check",
+    "upgrade": "game upgrade",
+    "migrate": "game migrate",
+    "link": "game link"
+  }
+}

@@ -1,0 +1,84 @@
+// {{title}} — the game with the editor over it.
+//
+//     just game run --editor
+//
+// Desktop only: the editor saves scenes into assets/scenes/ through
+// dart:io, so it runs from the project folder on Windows, macOS or Linux.
+//
+// The editor never ships. In a profile or release build of this file, main
+// runs the game exactly as lib/main.dart does, and the compiler drops the
+// editor as dead code. Hot reload (r) reaches the editor's modules, the
+// game's components and spawners: lib/editor/editor_wiring.dart is what the
+// editor runs again after each reload.
+
+// The editor packages are dev dependencies; only this entry point imports
+// them.
+// ignore_for_file: depend_on_referenced_packages
+
+import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/material.dart';
+import 'package:just_game_engine/just_game_engine.dart';
+import 'package:just_game_engine_editor/just_game_engine_editor.dart';
+
+import 'editor/editor_wiring.dart';
+import 'game/game_boot.dart';
+import 'main.dart' show {{App}};
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // kDebugMode is a compile-time constant, so a release build keeps only
+  // the game's branch and _runEditor is not compiled in. An early `return`
+  // would not do: code after it still is. `just doctor` checks that main
+  // keeps this shape.
+  if (kDebugMode) {
+    await _runEditor();
+  } else {
+    runApp(const {{App}}());
+  }
+}
+
+/// The editor over the game: debug builds only.
+Future<void> _runEditor() async {
+  if (!JustGameEditorPlugin.supportsPlatform) {
+    // A phone, a tablet or the web: nothing on disk to edit. Play instead.
+    runApp(const {{App}}());
+    return;
+  }
+
+  // The same boot the game uses, so the editor edits the world it runs.
+  final engine = await GameBoot.boot();
+  final plugin = await JustGameEditorPlugin.register(
+    engine: engine,
+    // The Asset Store, and every module the installed store items bring.
+    modules: EditorWiring.modules(),
+    // Play ▶ spawns at each spawn point through these.
+    spawners: GameBoot.spawners,
+    onReassemble: (plugin) => EditorWiring.wire(engine, plugin),
+  );
+  engine.start();
+  runApp(_EditorApp(engine: engine, plugin: plugin));
+}
+
+class _EditorApp extends StatelessWidget {
+  const _EditorApp({required this.engine, required this.plugin});
+
+  final Engine engine;
+  final JustGameEditorPlugin? plugin;
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: '{{title.dart}} — Editor',
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        backgroundColor: const Color(0xFF1A1A2E),
+        body: JustGameEngineEditor(
+          engine: engine,
+          plugin: plugin,
+          showTerminal: true,
+        ),
+      ),
+    );
+  }
+}

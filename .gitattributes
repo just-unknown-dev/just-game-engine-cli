@@ -1,0 +1,6 @@
+# LF everywhere, also in a Windows checkout (core.autocrlf): the template
+# bundler, the generated templates.g.dart and the tests expect it.
+* text=auto eol=lf
+
+# Compared byte for byte: some fixtures are CRLF on purpose.
+test/fixtures/** -text

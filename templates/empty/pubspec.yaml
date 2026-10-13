@@ -1,0 +1,28 @@
+name: {{name}}
+description: "{{title.yaml}}, made with the Just Game Engine."
+publish_to: none
+version: 0.1.0+1
+
+environment:
+  sdk: {{dart}}
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # just_audio_engine registers a web plugin without depending on
+  # flutter_web_plugins; depending on it here keeps web builds compiling.
+  flutter_web_plugins:
+    sdk: flutter
+{{dependencies}}
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  # The editor and the tools are dev dependencies: a release build leaves
+  # out their native plugins, and only lib/main_editor.dart imports them.
+{{dev_dependencies}}
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/scenes/
+    - assets/project/physics.json

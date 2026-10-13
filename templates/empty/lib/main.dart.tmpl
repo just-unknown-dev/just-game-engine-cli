@@ -1,0 +1,30 @@
+// {{title}} — the game, as it ships.
+//
+// Deliberately does NOT import the editor: keeping it out of this file's
+// imports is what keeps it out of a release build (`just check` proves it).
+// To author levels, run the editor instead:
+//
+//     just game run --editor
+
+import 'package:flutter/material.dart';
+
+import 'game/game_app.dart';
+
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const {{App}}());
+}
+
+/// The application.
+class {{App}} extends StatelessWidget {
+  const {{App}}({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      title: '{{title.dart}}',
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(backgroundColor: Color(0xFF1A1A2E), body: GameApp()),
+    );
+  }
+}

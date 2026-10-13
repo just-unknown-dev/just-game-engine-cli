@@ -1,0 +1,74 @@
+import 'package:flutter/painting.dart';
+import 'package:just_game_engine/just_game_engine.dart';
+
+import 'store_extensions.g.dart';
+
+/// Brings up the engine: shared by the game and the editor, so both run the
+/// same world.
+abstract final class GameBoot {
+  /// Makes and initialises an engine with the game's systems. Each call
+  /// makes a new one; the caller disposes it.
+  static Future<Engine> boot() async {
+    final engine = Engine(config: config);
+    await engine.initialize();
+    registerSystems(engine);
+    return engine;
+  }
+
+  /// What the game teaches its engine: the components a level can hold.
+  /// [storeExtensions] is what the installed store items add (generated in
+  /// lib/game/store_extensions.g.dart); the game's own go after it.
+  static const extensions = <ContextExtension>[
+    ...storeExtensions,
+  ];
+
+  /// The engine's standard systems — input, physics, movement, audio,
+  /// rendering, sprites, level maps, cameras — and [extensions].
+  static const config = EngineConfig(
+    extensions: extensions,
+    defaultSystems: DefaultSystems.all,
+  );
+
+  /// The game's own systems, added to the standard ones.
+  static List<System> systems(Engine engine) => [];
+
+  /// Adds [systems] to [engine]'s world.
+  static void registerSystems(Engine engine) =>
+      systems(engine).forEach(engine.world.addSystem);
+
+  /// Adds the [systems] the world doesn't have yet: after a hot reload, a
+  /// new system runs without a restart.
+  static void addMissingSystems(Engine engine) {
+    final running = {for (final s in engine.world.systems) s.runtimeType};
+    for (final system in systems(engine)) {
+      if (!running.contains(system.runtimeType)) {
+        engine.world.addSystem(system);
+      }
+    }
+  }
+
+  /// What a level's spawn points can create. The editor's Play button and
+  /// the game spawn through these, so play-testing makes what ships.
+  static List<Spawner> get spawners => [
+    Spawner(
+      id: 'player',
+      label: 'Player',
+      description: 'The player starts here.',
+      tags: const {'player'},
+      spawn: (world, point) {
+        final at = point.getComponent<TransformComponent>()?.position;
+        return world.createEntityWithComponents([
+          TransformComponent(position: Vector3(at?.x ?? 0, at?.y ?? 0, 0)),
+          // A placeholder to see: swap in your sprite and controls.
+          RectangleComponent(
+            width: 32,
+            height: 48,
+            fillStyle: const ShapePaintStyle(color: Color(0xFF6C8CFF)),
+          ),
+          // The level's camera follows whatever is tagged 'player'.
+          TagComponent('player'),
+        ], name: 'Player');
+      },
+    ),
+  ];
+}
