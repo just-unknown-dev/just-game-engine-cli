@@ -109,14 +109,17 @@ void main() {
       );
     });
 
-    test("the store's repository is its website: the package is in a "
-        'folder', () {
+    test('the store is a dev tool from pub.dev, where just_core_cli trusts '
+        'it', () {
       final store = GameSet.current['just_asset_store']!;
-      expect(store.source, PackageSource.git);
-      expect(
-        TemplateRenderer.dependencyLines(store),
-        contains('      path: packages/just_asset_store'),
-      );
+      expect(store.source, PackageSource.hosted);
+      expect(store.dev, isTrue, reason: 'a game never ships the store');
+      expect(TemplateRenderer.dependencyLines(store), [
+        '  just_asset_store: ${store.constraint}',
+      ]);
+      // `game init` runs it without asking only because just_core_cli
+      // (from 0.1.1) lists it as the ecosystem's own on pub.dev.
+      expect(PluginTrust.onPubDev, contains('just_asset_store'));
       expect(GameSet.named(GameSet.current.id), same(GameSet.current));
     });
 
@@ -275,8 +278,14 @@ void main() {
             '--overwrite --yes --source a',
       ]);
       final pubspec = h.read('pubspec.yaml')!;
-      expect(pubspec, contains('    git:\n'));
-      expect(pubspec, contains('      path: packages/just_asset_store\n'));
+      expect(
+        pubspec.split('dev_dependencies:').last,
+        contains(
+          '  just_asset_store: '
+          '${GameSet.current['just_asset_store']!.constraint}\n',
+        ),
+        reason: 'from pub.dev, a dev dependency',
+      );
       expect(
         pubspec,
         isNot(contains('just_game_engine_editor')),
@@ -329,8 +338,16 @@ void main() {
       );
     });
 
-    test('a store from a package mirror runs only once allowed', () async {
-      h.launcher.servers = {'just_asset_store': 'https://pub.example.com'};
+    test('a store from pub.dev runs; from a package mirror only once '
+        'allowed', () async {
+      // Where the game set gets it: the ecosystem's own there.
+      h.launcher.servers = {'just_asset_store': 'https://pub.dev'};
+      expect(await h.just(['game', 'init', '--yes']), 0, reason: '${h.err}');
+      expect(ran().last, contains('store install just_asset_store_editor'));
+
+      h.launcher
+        ..runs.clear()
+        ..servers = {'just_asset_store': 'https://pub.example.com'};
       expect(await h.just(['game', 'init', '--yes']), 1);
       expect('${h.err}', contains('just_asset_store is not allowed to run'));
       expect('${h.err}', contains('--yes never allows a plugin'));

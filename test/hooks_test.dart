@@ -17,6 +17,9 @@ import 'package:test/test.dart';
 import 'support/fake_launcher.dart';
 
 void main() {
+  // The engine's constraint in the set: what an upgrade moves it to.
+  final engine = GameSet.current['just_game_engine']!.constraint;
+
   late Directory tmp;
   late GameHarness h;
 
@@ -49,7 +52,7 @@ void main() {
       );
       final result = (jsonDecode('${h.out}') as Map)['result'] as Map;
       expect(result['packages'], {
-        'just_game_engine': {'from': '^1.6.0', 'to': '^2.0.0'},
+        'just_game_engine': {'from': '^1.6.0', 'to': engine},
         'just_game_engine_editor': {'from': '^0.0.1', 'to': '^0.1.0-dev.1'},
       });
       expect(result['changed'], isFalse);
@@ -63,7 +66,7 @@ void main() {
 
       expect(await h.just(['game', 'upgrade', '--yes']), 0, reason: '${h.err}');
       final next = h.read('pubspec.yaml')!;
-      expect(next, contains('  just_game_engine: ^2.0.0 # the engine\r\n'));
+      expect(next, contains('  just_game_engine: $engine # the engine\r\n'));
       expect(next, contains('  just_tiled: ^0.4.1\r\n'), reason: 'current');
       expect(
         next,
@@ -185,8 +188,14 @@ void main() {
         await h.just(['game', 'link', '--unlink', '--check', ...pairs()]),
         1,
       );
-      expect('${h.err}', contains('just_asset_store, just_game_engine_editor'));
-      expect('${h.err}', contains('store install'));
+      // The store comes from pub.dev: only the editor, a store item, is
+      // stranded, and the message says how to install it.
+      expect('${h.err}', contains('for just_game_engine_editor by version'));
+      expect(
+        '${h.err}',
+        contains('just store install just_game_engine_editor'),
+      );
+      expect('${h.err}', isNot(contains('null')));
       expect(h.launcher.runs, isEmpty);
 
       // Only what pub.dev has: the links may go.
@@ -271,7 +280,7 @@ void main() {
       var found = await findings();
       expect(
         found['just_game_engine is 1.6.0; the ${GameSet.current.id} game set '
-            'has ^2.0.0.'],
+            'has $engine.'],
         'warning',
       );
       expect(found.keys, isNot(contains(contains('newer than'))));
@@ -281,7 +290,7 @@ void main() {
       found = await findings();
       expect(
         found['just_game_engine is 3.0.0, newer than the '
-            '${GameSet.current.id} game set (^2.0.0) this just_game_engine_cli '
+            '${GameSet.current.id} game set ($engine) this just_game_engine_cli '
             'knows.'],
         'warning',
         reason: '`just upgrade` would not move it: a newer plugin would',

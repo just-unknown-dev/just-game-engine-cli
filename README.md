@@ -44,7 +44,7 @@ Every command takes `--json` (one JSON document on stdout, messages on stderr), 
 
 Every change these commands make goes through just_core_cli's transactions with the editor's trash (`trashRoot: '.editor_trash'`, `GameTemplate.editorTrash`): what a scene change or a migration replaces is restorable from the editor, as before.
 
-The Asset Store is called like any plugin, under just_core_cli's trust rule: from a local checkout or the ecosystem's repositories it runs; from pub.dev it runs once just_core_cli lists its name as claimed there (`PluginTrust.onPubDev`); from anywhere else only once allowed in `just.json` or your user `plugins.json`, or when you say yes in a terminal.
+The Asset Store is called like any plugin, under just_core_cli's trust rule: from a local checkout or the ecosystem's repositories it runs, and from pub.dev, where the game set gets it, too: just_core_cli lists its name as claimed there (`PluginTrust.onPubDev`, from just_core_cli 0.1.1); from anywhere else only once allowed in `just.json` or your user `plugins.json`, or when you say yes in a terminal.
 
 ## As a library
 
