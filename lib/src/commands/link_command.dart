@@ -71,15 +71,21 @@ final class GameLinkCommand extends JustCommand {
       final stranded = GameSet.current.linkOnly(pubspec, links.keys);
       output.result = {'stranded': stranded};
       if (stranded.isNotEmpty) {
+        // What each needs: its git source, or, for a store item, the store.
+        final fixes = [
+          for (final name in stranded)
+            if (GameSet.current[name]?.git case final url?)
+              '$name as a git dependency (`git: url: $url`)'
+            else
+              '$name removed from pubspec.yaml and installed with '
+                  '`${context.invokedAs} store install $name`',
+        ];
         throw CommandFailure(
           'Nothing was unlinked: pubspec.yaml asks pub.dev for '
           '${stranded.join(', ')} by version, but they come only from git or '
           'the Asset Store, so without the links pub could not resolve the '
           'project. Give each its real source in pubspec.yaml first — '
-          'just_asset_store as a git dependency (`git: url: '
-          '${GameSet.current['just_asset_store']?.git}`), a store item '
-          'removed from pubspec.yaml and installed with '
-          '`${context.invokedAs} store install <id>` — or keep the links.',
+          '${fixes.join('; ')} — or keep the links.',
         );
       }
       return 0;

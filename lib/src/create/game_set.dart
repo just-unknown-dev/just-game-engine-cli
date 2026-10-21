@@ -46,7 +46,9 @@ final class GameSet extends PackageSet {
       SetPackage('just_graphics_engine', '^0.1.0-dev.2'),
       SetPackage('just_deflate', '^0.1.0'),
       SetPackage('just_audio_engine', '^1.1.0'),
-      SetPackage('just_asset_store', '^0.1.0'),
+      // The Asset Store: a tool, never shipped. From pub.dev, where
+      // just_core_cli trusts it (PluginTrust.onPubDev, from 0.1.1).
+      SetPackage('just_asset_store', '^0.1.0', dev: true),
       SetPackage(
         'just_game_engine_editor',
         '^0.1.0-dev.1',

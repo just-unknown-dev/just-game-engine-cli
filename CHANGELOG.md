@@ -1,3 +1,9 @@
+## 0.1.2
+
+- **Needs just_core_cli ^0.1.1**, which trusts just_asset_store from pub.dev (`PluginTrust.onPubDev`). Game set 2026.10 takes the store from pub.dev, and just_core_cli 0.1.0 trusted it only from a checkout or its git repository, so `game init` (`just create`) refused to run it under `--yes` and asked about it in a terminal. Now it runs without asking, as it did from its git tag.
+- just_asset_store is a dev dependency again, as it was before 0.1.1: the store is a tool, and a game never ships it. `game init --local` registers its checkout among the store items again.
+- `game link --unlink --check` names what each stranded package needs: its git source, or, for a store item, `just store install <id>`. It no longer tells you to add just_asset_store as a git dependency with no URL.
+
 ## 0.1.1
 
 - The game set 2026.10 moves to just_game_engine_formats ^0.2.0, just_physics_engine ^1.5.0, just_graphics_engine ^0.1.0-dev.2, just_game_engine_editor and just_editor_core ^0.1.0-dev.1 (their first releases), just_third_person_kit ^0.1.0-dev.1, and has just_world_builder_kit ^0.1.0-dev and just_material_editor ^0.1.0-dev.1 (its first release). just_graphics_editor leaves the set: editing 3D graphics is the editor's own.
