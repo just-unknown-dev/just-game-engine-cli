@@ -1,4 +1,11 @@
+## 0.1.1
+
+- The game set 2026.10 moves to just_game_engine_formats ^0.2.0, just_physics_engine ^1.5.0, just_graphics_engine ^0.1.0-dev.2, just_game_engine_editor and just_editor_core ^0.1.0-dev.1 (their first releases), just_third_person_kit ^0.1.0-dev.1, and has just_world_builder_kit ^0.1.0-dev and just_material_editor ^0.1.0-dev.1 (its first release). just_graphics_editor leaves the set: editing 3D graphics is the editor's own.
+- `game scene validate` accepts entries that place a prefab.
+
 ## 0.1.0
+
+- **`just_editor_core`**, the editor's module contract split out of `just_game_engine_editor`, is in the game set (it comes with the editor and the kits) and editor-only for a release: nothing a release builds may import it.
 
 The first release: the Just Game Engine's commands for `just` (just_core_cli 0.1.0), as a plugin every game has in its dev dependencies.
 

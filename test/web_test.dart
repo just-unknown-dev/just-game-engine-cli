@@ -22,7 +22,7 @@ void main() {
       final (next, bumps) = GameSet.current.bump(pubspec);
       expect(bumps, {
         'just_game_engine': {'from': '^1.6.0', 'to': '^2.0.0'},
-        'just_game_engine_editor': {'from': 'any', 'to': '^0.1.0'},
+        'just_game_engine_editor': {'from': 'any', 'to': '^0.1.0-dev.1'},
       });
       expect(next, contains('  just_game_engine: ^2.0.0 # the engine\r\n'));
       expect(next, contains('  just_tiled: ^0.4.1\r\n'));

@@ -28,9 +28,12 @@ final class GameSet extends PackageSet {
     flutter: '>=3.47.1',
     dart: '^3.12.2',
     packages: [
-      SetPackage('just_game_engine', '^2.0.0'),
-      SetPackage('just_game_engine_formats', '^0.1.0'),
-      SetPackage('just_physics_engine', '^1.4.0'),
+      SetPackage('just_game_engine', '^2.0.0-dev.2'),
+      SetPackage('just_game_engine_formats', '^0.2.0'),
+      SetPackage('just_physics_engine', '^1.5.0'),
+      // Box2D for the physics engine's 2D, built by default; a game
+      // turns it off with hooks: user_defines: just_box_2d: build: false.
+      SetPackage('just_box_2d', '^0.1.0'),
       // Jolt for the physics engine's 3D. Every game has it through
       // just_physics_engine; only a 3D game's pubspec builds it
       // (hooks: user_defines: just_jolt: build: true).
@@ -40,24 +43,22 @@ final class GameSet extends PackageSet {
       SetPackage('just_dart', '^0.2.0'),
       // The engine's 3D graphics (Graphics3D). Every game has it through
       // just_game_engine; a 2D game never makes a GPU device.
-      SetPackage('just_graphics_engine', '^0.1.0-dev.1'),
+      SetPackage('just_graphics_engine', '^0.1.0-dev.2'),
       SetPackage('just_deflate', '^0.1.0'),
-      SetPackage('just_audio_engine', '^1.0.2'),
-      SetPackage(
-        'just_asset_store',
-        '^0.1.0',
-        source: PackageSource.git,
-        git: 'https://github.com/just-unknown-dev/just-asset-store',
-        ref: 'v0.1.0',
-        // The repository's root is the store's website.
-        path: 'packages/just_asset_store',
-        dev: true,
-      ),
+      SetPackage('just_audio_engine', '^1.1.0'),
+      SetPackage('just_asset_store', '^0.1.0'),
       SetPackage(
         'just_game_engine_editor',
-        '^0.1.0',
+        '^0.1.0-dev.1',
         source: PackageSource.plugin,
         dev: true,
+      ),
+      // What the editor and every kit's editor side build on: it comes
+      // with them, never on its own.
+      SetPackage(
+        'just_editor_core',
+        '^0.1.0-dev.1',
+        source: PackageSource.plugin,
       ),
       SetPackage(
         'just_asset_store_editor',
@@ -65,16 +66,24 @@ final class GameSet extends PackageSet {
         source: PackageSource.plugin,
         dev: true,
       ),
-      // The 3D kit and editor, for games that use them (the third-person
-      // template). A new 2D game doesn't get them.
+      // The 3D kits, for games that use them (the third-person template).
+      // A new 2D game doesn't get them. Editing 3D graphics is the editor's
+      // own.
       SetPackage(
-        'just_third_person_kit',
+        'just_world_builder_kit',
         '^0.1.0-dev',
         source: PackageSource.plugin,
       ),
       SetPackage(
-        'just_graphics_editor',
-        '^0.1.0-dev',
+        'just_third_person_kit',
+        '^0.1.0-dev.1',
+        source: PackageSource.plugin,
+      ),
+      // The material editor, for 2D and 3D games alike (both templates
+      // install it).
+      SetPackage(
+        'just_material_editor',
+        '^0.1.0-dev.1',
         source: PackageSource.plugin,
         dev: true,
       ),

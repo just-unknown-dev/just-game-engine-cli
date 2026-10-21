@@ -216,7 +216,7 @@ void main() {
       final pubspec = h.read('pubspec.yaml')!;
       expect(pubspec, contains('name: space_game'));
       expect(pubspec, contains('  just_game_engine: ^2.0.0'));
-      expect(pubspec, contains('  just_game_engine_editor: ^0.1.0'));
+      expect(pubspec, contains('  just_game_engine_editor: ^0.1.0-dev.1'));
       expect(pubspec, contains('  just_core_cli: ^0.1.0'));
       expect(pubspec, contains('  just_game_engine_cli: ^0.1.0'));
       expect(pubspec, isNot(contains('{{')));

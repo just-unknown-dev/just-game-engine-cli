@@ -50,7 +50,7 @@ void main() {
       final result = (jsonDecode('${h.out}') as Map)['result'] as Map;
       expect(result['packages'], {
         'just_game_engine': {'from': '^1.6.0', 'to': '^2.0.0'},
-        'just_game_engine_editor': {'from': '^0.0.1', 'to': '^0.1.0'},
+        'just_game_engine_editor': {'from': '^0.0.1', 'to': '^0.1.0-dev.1'},
       });
       expect(result['changed'], isFalse);
       expect(h.read('pubspec.yaml'), pubspec);
@@ -70,7 +70,7 @@ void main() {
         contains('      url: https://example.com/store\r\n'),
         reason: 'a block stays as it is',
       );
-      expect(next, contains('  just_game_engine_editor: ^0.1.0\r\n'));
+      expect(next, contains('  just_game_engine_editor: ^0.1.0-dev.1\r\n'));
       expect(h.launcher.runs, isEmpty, reason: '`just upgrade` fetches');
 
       h.out.clear();
@@ -119,7 +119,7 @@ void main() {
         'pubspec.yaml',
         'name: game\n'
             'dependencies:\n  just_game_engine: ^2.0.0\n'
-            'dev_dependencies:\n  just_game_engine_editor: ^0.1.0\n',
+            'dev_dependencies:\n  just_game_engine_editor: ^0.1.0-dev.1\n',
       );
       resolve(Directory(h.project.root), [store]);
     });
@@ -179,7 +179,7 @@ void main() {
             'dependencies:\n  just_game_engine: ^2.0.0\n'
             'dev_dependencies:\n'
             '  just_asset_store: ^0.1.0\n'
-            '  just_game_engine_editor: ^0.1.0\n',
+            '  just_game_engine_editor: ^0.1.0-dev.1\n',
       );
       expect(
         await h.just(['game', 'link', '--unlink', '--check', ...pairs()]),

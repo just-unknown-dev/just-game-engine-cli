@@ -174,6 +174,31 @@ void main() {
       expect('${h.out}', contains('ok  b'));
     });
 
+    test('validate takes an instance of a prefab file for an entity', () async {
+      h
+        ..write(
+          'assets/scenes/a.scene.json',
+          jsonEncode({
+            'version': SceneFormat.current,
+            'entities': [
+              {'name': 'Crate', 'prefab': {'path': 'assets/prefabs/crate.prefab.json'}},
+            ],
+          }),
+        )
+        ..write(
+          'assets/scenes/b.scene.json',
+          jsonEncode({
+            'version': SceneFormat.current,
+            'entities': [
+              {'name': 'Crate', 'prefab': {'path': ''}},
+            ],
+          }),
+        );
+      expect(await just(['game', 'scene', 'validate']), 1);
+      expect('${h.out}', contains('ok  a'));
+      expect('${h.out}', contains('b: "Crate" is an instance of no prefab file'));
+    });
+
     test('a folder named like a scene is no scene', () async {
       Directory(
         '${tmp.path}/assets/scenes/odd.scene.json',

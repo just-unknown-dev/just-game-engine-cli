@@ -72,11 +72,13 @@ final class ReleaseRules {
   /// The project's own folder of editor code, imported by relative path.
   static const String appEditorFolder = 'lib/editor/';
 
-  /// What is editor-only whatever the project: the editor, the store, the
-  /// tools (`just` and these commands), and the test helpers (the input
-  /// system's, and the physics engine's fake 3-D engine).
+  /// What is editor-only whatever the project: the editor and its core
+  /// (`just_editor_core`), the store, the tools (`just` and these commands),
+  /// and the test helpers (the input system's, and the physics engine's fake
+  /// 3-D engine).
   static const List<String> coreForbidden = [
     'just_game_engine_editor',
+    'just_editor_core',
     'just_asset_store/',
     'just_asset_store_editor/',
     'just_core_cli/',

@@ -176,7 +176,7 @@ void main() {
           'pubspec.yaml',
           'name: game\r\n'
               'dependencies:\r\n'
-              '  just_game_engine_editor: ^0.1.0\r\n'
+              '  just_game_engine_editor: ^0.1.0-dev.1\r\n'
               '  just_ui_editor: ^0.1.0\r\n',
         )
         ..write(

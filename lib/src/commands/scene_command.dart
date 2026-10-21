@@ -549,6 +549,14 @@ final class _SceneValidate extends _SceneBase {
           } else if (!seen.add(name)) {
             found.add('two entities called "$name"');
           }
+          // An instance of a prefab file holds its prefab, not components.
+          final prefab = e['prefab'];
+          if (prefab != null) {
+            if (prefab is! Map || prefab['path'] is! String || (prefab['path'] as String).isEmpty) {
+              found.add('"$name" is an instance of no prefab file');
+            }
+            continue;
+          }
           final components = e['components'];
           if (components is! List) {
             found.add('"$name" has no component list');
