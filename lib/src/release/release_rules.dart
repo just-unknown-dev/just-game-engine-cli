@@ -72,15 +72,15 @@ final class ReleaseRules {
   /// The project's own folder of editor code, imported by relative path.
   static const String appEditorFolder = 'lib/editor/';
 
-  /// What is editor-only whatever the project: the editor and its core
-  /// (`just_editor_core`), the store, the tools (`just` and these commands),
+  /// What is editor-only whatever the project: the editor (with the Asset
+  /// Store's window) and its core (`just_editor_core`), the store's core
+  /// (`just_asset_store`), the tools (`just` and these commands),
   /// and the test helpers (the input system's, and the physics engine's fake
   /// 3-D engine).
   static const List<String> coreForbidden = [
     'just_game_engine_editor',
     'just_editor_core',
     'just_asset_store/',
-    'just_asset_store_editor/',
     'just_core_cli/',
     'just_game_engine_cli/',
     'just_inputs/testing.dart',
@@ -92,7 +92,7 @@ final class ReleaseRules {
     'JustGameEditorPlugin',
     'EditorScope',
     'LevelDesignerSession',
-    'AssetStoreModule',
+    'BuiltInAssetStoreModule',
     'StoreController',
   ];
 
@@ -102,7 +102,7 @@ final class ReleaseRules {
     'Just Runtime Editor',
     'sprite_studio.open',
     'input_editor.open',
-    'just.asset_store',
+    'asset_store.open',
   ];
 
   /// The rules for a game: the core ones, plus what its installed store

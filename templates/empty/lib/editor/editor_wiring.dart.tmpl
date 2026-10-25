@@ -10,7 +10,6 @@
 //
 // ignore_for_file: depend_on_referenced_packages
 
-import 'package:just_asset_store_editor/just_asset_store_editor.dart';
 import 'package:just_game_engine/just_game_engine.dart';
 import 'package:just_game_engine_editor/just_game_engine_editor.dart';
 
@@ -21,15 +20,12 @@ import 'store_modules.g.dart';
 abstract final class EditorWiring {
   /// The editor's modules.
   ///
-  /// AssetStoreModule is the Asset Store (Ctrl+Shift+G), listed by hand
-  /// so a broken generated file can never take it down. storeModules() is
-  /// every module the installed store items bring
-  /// (lib/editor/store_modules.g.dart, rewritten by `just add`). Your own
-  /// game's module goes here too.
-  static List<EditorModule> modules() => [
-    AssetStoreModule(),
-    ...storeModules(),
-  ];
+  /// storeModules() is every module the installed store items bring
+  /// (lib/editor/store_modules.g.dart, rewritten by `just add`). The Asset
+  /// Store itself (the shop button under the transform tools, or
+  /// Ctrl+Shift+G) is part of the editor, so a broken generated file can
+  /// never take it down. Your own game's module goes here too.
+  static List<EditorModule> modules() => [...storeModules()];
 
   /// After a hot reload: the extensions, systems, modules and spawners
   /// again, from the code as it now is.

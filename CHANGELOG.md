@@ -1,3 +1,11 @@
+## 0.1.3
+
+- **The Asset Store is part of the editor** from just_game_engine_editor 0.1.0-dev.2, so the game set 2026.10 asks for the editor at ^0.1.0-dev.2 and no longer has just_asset_store_editor. `game init` (`just create`) installs the editor alone, and a new game's `EditorWiring.modules` lists only the store items' modules (`storeModules()`).
+- The game set asks for just_game_engine ^2.0.0-dev.3, whose animators leave a scene's saved animation fields as they were authored (the third-person template reads the new playing values).
+- The game set asks for just_asset_store ^0.1.1, which installs editor tools and kits into `plugins/{category}/{name}/` and content into `packages/{category}/{name}/`.
+- The release checks look for the editor's store module by its new names (`BuiltInAssetStoreModule`, `asset_store.open`); just_asset_store stays forbidden in a release.
+- `game init` takes `--local` once for each folder of checkouts, as just_core_cli 0.1.2's `just create --local` passes them (say `packages/` and `plugins/`), and registers the store items of all of them; a package checked out in two of them stops it.
+
 ## 0.1.2
 
 - **Needs just_core_cli ^0.1.1**, which trusts just_asset_store from pub.dev (`PluginTrust.onPubDev`). Game set 2026.10 takes the store from pub.dev, and just_core_cli 0.1.0 trusted it only from a checkout or its git repository, so `game init` (`just create`) refused to run it under `--yes` and asked about it in a terminal. Now it runs without asking, as it did from its git tag.

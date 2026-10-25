@@ -16,8 +16,9 @@ import '../create/game_template.dart';
 /// It lays the game template over what `flutter create` wrote (the engine,
 /// the tools and the editor in the pubspec, a first level, the editor's
 /// git ignores, macOS's network permission), fetches the packages, adds the
-/// editor through the Asset Store (`store link` for `--local` checkouts,
-/// `store install` otherwise), lays a store `--template` over it all, and
+/// editor through the Asset Store (`store link` for the checkouts of each
+/// `--local` folder, `store install` otherwise), lays a store `--template`
+/// over it all, and
 /// switches Flutter GPU on in the runners of a game that draws in 3D.
 ///
 /// The pubspec it writes keeps just_core_cli and just_game_engine_cli in
@@ -55,11 +56,13 @@ final class GameInitCommand extends JustCommand {
         valueHelp: 'catalog',
         help: 'A store catalog to find a --template in; repeat for several.',
       )
-      ..addOption(
+      ..addMultiOption(
         'local',
-        valueHelp: 'packages folder',
+        valueHelp: 'folder',
+        splitCommas: false,
         help:
-            'The local checkouts `just create --local` linked: their store '
+            'A folder of the local checkouts `just create --local` linked '
+            '(once for each, such as packages/ and plugins/): their store '
             'items are registered as linked instead of installed.',
       );
   }
@@ -104,18 +107,15 @@ final class GameInitCommand extends JustCommand {
     if (fromStore && PackageNames.idProblem(template) != null) {
       throw UsageFailure('"$template" is not a template id.');
     }
-    final local = argResults!.option('local');
-    final checkouts = local == null
-        ? const <Checkout>[]
-        : DevLinks.scan(
-            Directory(
-              File(local).isAbsolute
-                  ? local
-                  : '${context.workingDirectory}/$local',
-            ),
-          );
-    if (local != null && checkouts.isEmpty) {
-      throw CommandFailure('No just_* packages in $local.');
+    final locals = argResults!.multiOption('local');
+    final checkouts = _checkoutsIn([
+      for (final local in locals)
+        Directory(
+          File(local).isAbsolute ? local : '${context.workingDirectory}/$local',
+        ),
+    ]);
+    if (locals.isNotEmpty && checkouts.isEmpty) {
+      throw CommandFailure('No just_* packages in ${locals.join(', ')}.');
     }
     final sdk =
         SdkLocator.locate(project.root, environment: context.environment) ??
@@ -131,7 +131,7 @@ final class GameInitCommand extends JustCommand {
         'run `flutter upgrade`.',
       );
     }
-    final linked = local != null;
+    final linked = locals.isNotEmpty;
     final quiet = output.json;
     final direct = GameTemplate.direct(set, tools);
 
@@ -277,5 +277,25 @@ final class GameInitCommand extends JustCommand {
   static Future<void> _must(String what, Future<int> run) async {
     final code = await run;
     if (code != 0) throw CommandFailure('$what failed (exit code $code).');
+  }
+
+  /// The checkouts in each of [dirs], by name. A package checked out in two
+  /// of them stops the command: which one is linked is the developer's to
+  /// say, and `just create` refuses it first.
+  static List<Checkout> _checkoutsIn(List<Directory> dirs) {
+    final byName = <String, Checkout>{};
+    for (final dir in dirs) {
+      for (final c in DevLinks.scan(dir)) {
+        final seen = byName[c.name];
+        if (seen != null && seen.path != c.path) {
+          throw CommandFailure(
+            '${c.name} is checked out in more than one folder '
+            '(${seen.path}, ${c.path}).',
+          );
+        }
+        byName[c.name] = c;
+      }
+    }
+    return byName.values.toList()..sort((a, b) => a.name.compareTo(b.name));
   }
 }

@@ -28,7 +28,7 @@ final class GameSet extends PackageSet {
     flutter: '>=3.47.1',
     dart: '^3.12.2',
     packages: [
-      SetPackage('just_game_engine', '^2.0.0-dev.2'),
+      SetPackage('just_game_engine', '^2.0.0-dev.3'),
       SetPackage('just_game_engine_formats', '^0.2.0'),
       SetPackage('just_physics_engine', '^1.5.0'),
       // Box2D for the physics engine's 2D, built by default; a game
@@ -48,10 +48,12 @@ final class GameSet extends PackageSet {
       SetPackage('just_audio_engine', '^1.1.0'),
       // The Asset Store: a tool, never shipped. From pub.dev, where
       // just_core_cli trusts it (PluginTrust.onPubDev, from 0.1.1).
-      SetPackage('just_asset_store', '^0.1.0', dev: true),
+      SetPackage('just_asset_store', '^0.2.0', dev: true),
+      // The editor, with the Asset Store's window built in from 0.1.0-dev.2:
+      // plugins and kits are added from inside it.
       SetPackage(
         'just_game_engine_editor',
-        '^0.1.0-dev.1',
+        '^0.1.0-dev.2',
         source: PackageSource.plugin,
         dev: true,
       ),
@@ -61,12 +63,6 @@ final class GameSet extends PackageSet {
         'just_editor_core',
         '^0.1.0-dev.1',
         source: PackageSource.plugin,
-      ),
-      SetPackage(
-        'just_asset_store_editor',
-        '^0.1.0',
-        source: PackageSource.plugin,
-        dev: true,
       ),
       // The 3D kits, for games that use them (the third-person template).
       // A new 2D game doesn't get them. Editing 3D graphics is the editor's

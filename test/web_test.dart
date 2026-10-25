@@ -23,7 +23,7 @@ void main() {
       final engine = GameSet.current['just_game_engine']!.constraint;
       expect(bumps, {
         'just_game_engine': {'from': '^1.6.0', 'to': engine},
-        'just_game_engine_editor': {'from': 'any', 'to': '^0.1.0-dev.1'},
+        'just_game_engine_editor': {'from': 'any', 'to': '^0.1.0-dev.2'},
       });
       expect(next, contains('  just_game_engine: $engine # the engine\r\n'));
       expect(next, contains('  just_tiled: ^0.4.1\r\n'));

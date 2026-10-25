@@ -27,7 +27,6 @@ abstract final class GameTemplate {
     'just_game_engine_cli',
     'just_asset_store',
     'just_game_engine_editor',
-    'just_asset_store_editor',
   ];
 
   /// [directPackages] as [game] (the engine's) or [tools] (the tools) has

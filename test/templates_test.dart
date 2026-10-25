@@ -156,7 +156,6 @@ void main() {
         ('just_game_engine_cli', false),
         ('just_game_engine', false),
         ('just_game_engine_editor', true),
-        ('just_asset_store_editor', true),
       ]) {
         package(packages, name, store: item ? const {} : null);
       }
@@ -195,6 +194,50 @@ void main() {
 
     List<String> ran() => [for (final r in h.launcher.runs) '$r'];
 
+    test('--local more than once: the store items of each folder are '
+        'linked; a package in two of them stops it first', () async {
+      // A workspace's plugins/, beside its packages/.
+      final plugins = Directory('${tmp.path}/plugins')..createSync();
+      package(plugins, 'just_material_editor', store: const {});
+      expect(
+        await h.just([
+          'game',
+          'init',
+          '--local',
+          packages.path,
+          '--local',
+          plugins.path,
+          '--yes',
+        ]),
+        0,
+        reason: '${h.err}',
+      );
+      expect(
+        h.launcher.runs.last.arguments.skip(4).map((p) => p.split('/').last),
+        ['just_asset_store', 'just_game_engine_editor', 'just_material_editor'],
+      );
+
+      package(plugins, 'just_game_engine');
+      h.launcher.runs.clear();
+      expect(
+        await h.just([
+          'game',
+          'init',
+          '--local',
+          packages.path,
+          '--local',
+          plugins.path,
+          '--yes',
+        ]),
+        1,
+      );
+      expect(
+        '${h.err}',
+        contains('just_game_engine is checked out in more than one folder'),
+      );
+      expect(h.launcher.runs, isEmpty, reason: 'nothing ran');
+    });
+
     test('--local: the game template, and the editor linked', () async {
       expect(
         await h.just(['game', 'init', '--local', packages.path, '--yes']),
@@ -211,7 +254,6 @@ void main() {
       ]);
       expect(link.skip(4).map((p) => p.split('/').last), [
         'just_asset_store',
-        'just_asset_store_editor',
         'just_game_engine_editor',
       ], reason: 'only the dev store items are registered');
       expect(h.launcher.runs, hasLength(2));
@@ -219,7 +261,7 @@ void main() {
       final pubspec = h.read('pubspec.yaml')!;
       expect(pubspec, contains('name: space_game'));
       expect(pubspec, contains('  just_game_engine: ^2.0.0'));
-      expect(pubspec, contains('  just_game_engine_editor: ^0.1.0-dev.1'));
+      expect(pubspec, contains('  just_game_engine_editor: ^0.1.0-dev.2'));
       expect(pubspec, contains('  just_core_cli: ^0.1.0'));
       expect(pubspec, contains('  just_game_engine_cli: ^0.1.0'));
       expect(pubspec, isNot(contains('{{')));
@@ -272,8 +314,6 @@ void main() {
         'pub get',
         'run just_asset_store:just_plugin store install '
             'just_game_engine_editor --yes',
-        'run just_asset_store:just_plugin store install '
-            'just_asset_store_editor --yes',
         'run just_asset_store:just_plugin store template studio_kit '
             '--overwrite --yes --source a',
       ]);
@@ -343,7 +383,7 @@ void main() {
       // Where the game set gets it: the ecosystem's own there.
       h.launcher.servers = {'just_asset_store': 'https://pub.dev'};
       expect(await h.just(['game', 'init', '--yes']), 0, reason: '${h.err}');
-      expect(ran().last, contains('store install just_asset_store_editor'));
+      expect(ran().last, contains('store install just_game_engine_editor'));
 
       h.launcher
         ..runs.clear()
@@ -359,7 +399,7 @@ void main() {
       );
       h.launcher.runs.clear();
       expect(await h.just(['game', 'init', '--yes']), 0, reason: '${h.err}');
-      expect(ran().last, contains('store install just_asset_store_editor'));
+      expect(ran().last, contains('store install just_game_engine_editor'));
     });
 
     test('a store that is not there, or a failing step, fails it; the '
