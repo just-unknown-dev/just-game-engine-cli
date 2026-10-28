@@ -30,7 +30,7 @@ final class GameSet extends PackageSet {
     packages: [
       SetPackage('just_game_engine', '^2.0.0-dev.3'),
       SetPackage('just_game_engine_formats', '^0.2.0'),
-      SetPackage('just_physics_engine', '^1.5.0'),
+      SetPackage('just_physics_engine', '^1.4.1'),
       // Box2D for the physics engine's 2D, built by default; a game
       // turns it off with hooks: user_defines: just_box_2d: build: false.
       SetPackage('just_box_2d', '^0.1.0'),
@@ -50,20 +50,13 @@ final class GameSet extends PackageSet {
       // just_core_cli trusts it (PluginTrust.onPubDev, from 0.1.1).
       SetPackage('just_asset_store', '^0.2.0', dev: true),
       // The editor, with the Asset Store's window built in from 0.1.0-dev.2:
-      // plugins and kits are added from inside it.
-      SetPackage(
-        'just_game_engine_editor',
-        '^0.1.0-dev.2',
-        source: PackageSource.plugin,
-        dev: true,
-      ),
+      // plugins and kits are added from inside it. From pub.dev, like every
+      // package; only plugins (the kits and editor tools below) come from
+      // the store.
+      SetPackage('just_game_engine_editor', '^0.1.0-dev.2', dev: true),
       // What the editor and every kit's editor side build on: it comes
       // with them, never on its own.
-      SetPackage(
-        'just_editor_core',
-        '^0.1.0-dev.1',
-        source: PackageSource.plugin,
-      ),
+      SetPackage('just_editor_core', '^0.1.0-dev.1'),
       // The 3D kits, for games that use them (the third-person template).
       // A new 2D game doesn't get them. Editing 3D graphics is the editor's
       // own.

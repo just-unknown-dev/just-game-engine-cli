@@ -179,24 +179,36 @@ void main() {
       h.write(
         'pubspec.yaml',
         'name: game\n'
-            'dependencies:\n  just_game_engine: ^2.0.0\n'
+            'dependencies:\n'
+            '  just_game_engine: ^2.0.0\n'
+            '  just_world_builder_kit: ^0.1.0-beta.1\n'
             'dev_dependencies:\n'
             '  just_asset_store: ^0.1.0\n'
             '  just_game_engine_editor: ^0.1.0-dev.1\n',
       );
+      final kit = package(packages, 'just_world_builder_kit', store: const {});
+      final withKit = [
+        ...pairs(),
+        'just_world_builder_kit=${normalPath(kit.absolute.path)}',
+      ];
       expect(
-        await h.just(['game', 'link', '--unlink', '--check', ...pairs()]),
+        await h.just(['game', 'link', '--unlink', '--check', ...withKit]),
         1,
       );
-      // The store comes from pub.dev: only the editor, a store item, is
-      // stranded, and the message says how to install it.
-      expect('${h.err}', contains('for just_game_engine_editor by version'));
-      expect(
-        '${h.err}',
-        contains('just store install just_game_engine_editor'),
-      );
+      // The store and the editor come from pub.dev: only the kit, a store
+      // item, is stranded, and the message says how to install it.
+      expect('${h.err}', contains('for just_world_builder_kit by version'));
+      expect('${h.err}', contains('just store install just_world_builder_kit'));
+      expect('${h.err}', isNot(contains('just_game_engine_editor')));
       expect('${h.err}', isNot(contains('null')));
       expect(h.launcher.runs, isEmpty);
+
+      // Without the kit, the store and the editor may lose their links.
+      expect(
+        await h.just(['game', 'link', '--unlink', '--check', ...pairs()]),
+        0,
+        reason: '${h.err}',
+      );
 
       // Only what pub.dev has: the links may go.
       expect(

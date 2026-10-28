@@ -1,3 +1,8 @@
+## 0.1.4
+
+- **`just create` works again.** The game set took just_game_engine_editor and just_editor_core from the Asset Store, but they are on pub.dev and the store doesn't list them, so `game init` failed at `just store install just_game_engine_editor` ("not in any of your sources") and the new project was removed. They now come from pub.dev: a new game lists the editor in its `dev_dependencies`, and the store runs only for a `--template` (and `--local`'s `store link`). Only plugins (kits and editor tools) still come from the store.
+- The game set asks for just_physics_engine ^1.4.1, the version on pub.dev and the one the engine needs. ^1.5.0 doesn't exist, so `just doctor` warned about it in every new game.
+
 ## 0.1.3
 
 - **The Asset Store is part of the editor** from just_game_engine_editor 0.1.0-dev.2, so the game set 2026.10 asks for the editor at ^0.1.0-dev.2 and no longer has just_asset_store_editor. `game init` (`just create`) installs the editor alone, and a new game's `EditorWiring.modules` lists only the store items' modules (`storeModules()`).

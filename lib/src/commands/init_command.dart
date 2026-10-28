@@ -15,11 +15,12 @@ import '../create/game_template.dart';
 ///
 /// It lays the game template over what `flutter create` wrote (the engine,
 /// the tools and the editor in the pubspec, a first level, the editor's
-/// git ignores, macOS's network permission), fetches the packages, adds the
-/// editor through the Asset Store (`store link` for the checkouts of each
-/// `--local` folder, `store install` otherwise), lays a store `--template`
-/// over it all, and
-/// switches Flutter GPU on in the runners of a game that draws in 3D.
+/// git ignores, macOS's network permission), fetches the packages, registers
+/// the store items of each `--local` folder's checkouts with the Asset Store
+/// (`store link`; without `--local` it installs any direct package that
+/// comes only from the store — none does today: the editor is on pub.dev),
+/// lays a store `--template` over it all, and switches Flutter GPU on in
+/// the runners of a game that draws in 3D.
 ///
 /// The pubspec it writes keeps just_core_cli and just_game_engine_cli in
 /// `dev_dependencies`, one line each, as `just create` added them, so

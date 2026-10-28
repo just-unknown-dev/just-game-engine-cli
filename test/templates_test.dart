@@ -283,8 +283,8 @@ void main() {
       expect('${h.out}', contains('`just game run --editor`'));
     });
 
-    test('from the store: the editor installed, a store template laid over, '
-        'and Flutter GPU on for a 3D game', () async {
+    test('from pub.dev: the editor in the pubspec, a store template laid '
+        'over, and Flutter GPU on for a 3D game', () async {
       h.launcher.exitCodeFor = (args) {
         if (args.contains('template')) {
           // The template brings a game that draws in 3D.
@@ -312,25 +312,17 @@ void main() {
       );
       expect(ran(), [
         'pub get',
-        'run just_asset_store:just_plugin store install '
-            'just_game_engine_editor --yes',
         'run just_asset_store:just_plugin store template studio_kit '
             '--overwrite --yes --source a',
-      ]);
+      ], reason: 'the store installs nothing: the editor is on pub.dev');
       final pubspec = h.read('pubspec.yaml')!;
-      expect(
-        pubspec.split('dev_dependencies:').last,
-        contains(
-          '  just_asset_store: '
-          '${GameSet.current['just_asset_store']!.constraint}\n',
-        ),
-        reason: 'from pub.dev, a dev dependency',
-      );
-      expect(
-        pubspec,
-        isNot(contains('just_game_engine_editor')),
-        reason: 'the store adds it',
-      );
+      for (final name in ['just_asset_store', 'just_game_engine_editor']) {
+        expect(
+          pubspec.split('dev_dependencies:').last,
+          contains('  $name: ${GameSet.current[name]!.constraint}\n'),
+          reason: '$name: from pub.dev, a dev dependency',
+        );
+      }
       expect(
         h.read('windows/runner/main.cpp'),
         contains('project.set_enable_flutter_gpu(true);'),
@@ -378,17 +370,31 @@ void main() {
       );
     });
 
+    test('the empty game needs no store: everything is on pub.dev', () async {
+      expect(await h.just(['game', 'init', '--yes']), 0, reason: '${h.err}');
+      expect(ran(), ['pub get'], reason: 'the store never ran');
+      expect(
+        PubspecConstraints.of(
+          h.read('pubspec.yaml')!,
+          'dev_dependencies',
+          'just_game_engine_editor',
+        ),
+        GameSet.current['just_game_engine_editor']!.constraint,
+      );
+    });
+
     test('a store from pub.dev runs; from a package mirror only once '
         'allowed', () async {
+      const init = ['game', 'init', '--template', 'studio_kit', '--yes'];
       // Where the game set gets it: the ecosystem's own there.
       h.launcher.servers = {'just_asset_store': 'https://pub.dev'};
-      expect(await h.just(['game', 'init', '--yes']), 0, reason: '${h.err}');
-      expect(ran().last, contains('store install just_game_engine_editor'));
+      expect(await h.just(init), 0, reason: '${h.err}');
+      expect(ran().last, contains('store template studio_kit'));
 
       h.launcher
         ..runs.clear()
         ..servers = {'just_asset_store': 'https://pub.example.com'};
-      expect(await h.just(['game', 'init', '--yes']), 1);
+      expect(await h.just(init), 1);
       expect('${h.err}', contains('just_asset_store is not allowed to run'));
       expect('${h.err}', contains('--yes never allows a plugin'));
       expect(ran(), ['pub get'], reason: 'the store never ran');
@@ -398,8 +404,8 @@ void main() {
         h.project.readProjectFile().allowing('just_asset_store'),
       );
       h.launcher.runs.clear();
-      expect(await h.just(['game', 'init', '--yes']), 0, reason: '${h.err}');
-      expect(ran().last, contains('store install just_game_engine_editor'));
+      expect(await h.just(init), 0, reason: '${h.err}');
+      expect(ran().last, contains('store template studio_kit'));
     });
 
     test('a store that is not there, or a failing step, fails it; the '
@@ -411,7 +417,10 @@ void main() {
       );
 
       h.launcher.packages = const [];
-      expect(await h.just(['game', 'init', '--yes']), 1);
+      expect(
+        await h.just(['game', 'init', '--template', 'studio_kit', '--yes']),
+        1,
+      );
       expect('${h.err}', contains('no just_asset_store'));
 
       h.launcher.exitCodeFor = (args) => args.first == 'pub' ? 1 : 0;

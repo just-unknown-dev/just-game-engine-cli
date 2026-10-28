@@ -33,7 +33,7 @@ Every command takes `--json` (one JSON document on stdout, messages on stderr), 
 
 | Hook | Command | When |
 |---|---|---|
-| `create` | `game init` (hidden) | `just create` made a Flutter project: lay the game template over it on the `GameSet` (keeping just_core_cli and this package in its dev dependencies), add the editor through the Asset Store, switch Flutter GPU on for a 3D game |
+| `create` | `game init` (hidden) | `just create` made a Flutter project: lay the game template over it on the `GameSet` (keeping just_core_cli and this package in its dev dependencies, and the editor from pub.dev), lay a store `--template` over it, switch Flutter GPU on for a 3D game |
 | `check` | `game check` | `just check`: release imports and saved formats |
 | `doctor` | `game doctor` | `just doctor`: the editor kept out of releases, git ignores, the macOS entitlement, Flutter and Dart against the engine's floors, the engine's packages against what resolved, store items linked to missing checkouts |
 | `upgrade` | `game upgrade` | `just upgrade`, inside its transaction: one-line bumps of the engine's packages in `pubspec.yaml` to the `GameSet` (a package already as new as the set, or newer, stays), no `pub get` (`just upgrade` fetches); `--check` (when the tools stay) says what would move |
