@@ -1,3 +1,14 @@
+## Unreleased
+
+- **`just game mcp`**: an MCP server for AI assistants (Claude Code, VS Code, Cursor, …), on stdin and stdout. It serves the engine as the game resolved it, so an assistant stops guessing 1.x or Flame APIs:
+  - `search_docs`: keyword search over just_game_engine's guides (`doc/guides/`, from the version that ships them), the packages' README, MIGRATION and CHANGELOG, and their public API.
+  - `read_doc`: a guide or note, whole or one section. `get_api`: a type or member's signature, doc comment, import, constructors, members and subtypes, with what replaces a deprecated one, read from the packages' source (export chains followed across packages).
+  - `project_info`, `list_scenes`, `validate_scenes` and `check_game` (`game doctor` and `game check`) run in-process, their output kept off the MCP stream.
+  - Every tool only reads. The server's instructions give the engine's versions and the rules that trip people up.
+- A new game has `AGENTS.md` (how it is built, its commands, those rules), a `CLAUDE.md` that points to it, and `.mcp.json` and `.vscode/mcp.json`, which start `just game mcp`.
+- Depends on dart_mcp ^0.5.2.
+- The `empty` template draws its stand-in player with `Rectangle2DComponent`, the engine's new name for `RectangleComponent`.
+
 ## 0.1.4
 
 - **`just create` works again.** The game set took just_game_engine_editor and just_editor_core from the Asset Store, but they are on pub.dev and the store doesn't list them, so `game init` failed at `just store install just_game_engine_editor` ("not in any of your sources") and the new project was removed. They now come from pub.dev: a new game lists the editor in its `dev_dependencies`, and the store runs only for a `--template` (and `--local`'s `store link`). Only plugins (kits and editor tools) still come from the store.

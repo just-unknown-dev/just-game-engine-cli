@@ -6,6 +6,7 @@ import 'package:just_core_cli/just_core_cli.dart';
 import 'doctor_command.dart';
 import 'init_command.dart';
 import 'link_command.dart';
+import 'mcp_command.dart';
 import 'migrate_command.dart';
 import 'run_build_check.dart';
 import 'scene_command.dart';
@@ -33,6 +34,7 @@ final class GameCommand extends JustCommand {
       GameDoctorCommand(),
       GameUpgradeCommand(),
       GameMigrateCommand(),
+      GameMcpCommand(),
       GameInitCommand(),
       GameLinkCommand(),
     ]) {

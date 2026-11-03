@@ -1,0 +1,9 @@
+{
+  "servers": {
+    "just_game_engine": {
+      "type": "stdio",
+      "command": "just",
+      "args": ["game", "mcp"]
+    }
+  }
+}

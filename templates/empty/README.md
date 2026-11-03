@@ -23,6 +23,13 @@ just doctor                   # check the project's setup
 just upgrade                  # newer tools and engine packages, old files migrated
 ```
 
+## With an AI assistant
+
+`AGENTS.md` tells an assistant how the game is built. `.mcp.json` (Claude
+Code) and `.vscode/mcp.json` (VS Code) start `just game mcp`, which serves
+it the engine's guides and API at the versions this game uses, and checks
+its scenes and setup.
+
 ## Layout
 
 | Path | What |

@@ -21,7 +21,11 @@ just game check release-build --platform web
 just game doctor                          # the editor kept out, SDK floors, engine versions, store links
 just game upgrade --check                 # what the engine's packages would move to (just upgrade runs it)
 just game migrate                         # old scenes, timelines and animator graphs rewritten
+
+just game mcp                             # for an AI assistant: the engine's docs and API over MCP
 ```
+
+`just game mcp` is an MCP server on stdin and stdout, which an AI assistant starts (a new game's `.mcp.json` and `.vscode/mcp.json` say how). Its tools only read: `search_docs`, `read_doc` and `get_api` serve the guides, notes and public API of the engine packages the game resolved, at those versions; `project_info`, `list_scenes`, `validate_scenes` and `check_game` run the commands above in-process.
 
 `just check`, `just doctor`, `just upgrade` and `just dev link|unlink` run the matching `game` commands for you: they are this plugin's hooks. `just help game build` shows a command's own help.
 

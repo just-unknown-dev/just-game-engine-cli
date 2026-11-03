@@ -4,6 +4,7 @@
 @TestOn('vm')
 library;
 
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:just_core_cli/just_core_cli.dart';
@@ -72,6 +73,22 @@ void main() {
       for (final e in files.entries) {
         expect(e.key, isNot(endsWith('.tmpl')));
         expect(e.value, isNot(contains('{{')), reason: e.key);
+      }
+    });
+
+    test("notes for AI assistants, and their MCP server's config", () {
+      final files = render('Bob');
+      expect(files['AGENTS.md'], startsWith('# Bob: notes for AI assistants'));
+      expect(files['AGENTS.md'], contains('engine.subsystem<T>()'));
+      expect(files['CLAUDE.md'], '@AGENTS.md\n');
+      for (final (path, key) in [
+        ('.mcp.json', 'mcpServers'),
+        ('.vscode/mcp.json', 'servers'),
+      ]) {
+        final config = jsonDecode(files[path]!) as Map<String, Object?>;
+        final server = (config[key] as Map)['just_game_engine'] as Map;
+        expect(server['command'], 'just', reason: path);
+        expect(server['args'], ['game', 'mcp'], reason: path);
       }
     });
 

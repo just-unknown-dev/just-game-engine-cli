@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "just_game_engine": {
+      "command": "just",
+      "args": ["game", "mcp"]
+    }
+  }
+}

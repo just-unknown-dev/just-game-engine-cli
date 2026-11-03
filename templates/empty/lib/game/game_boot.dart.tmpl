@@ -60,7 +60,7 @@ abstract final class GameBoot {
         return world.createEntityWithComponents([
           TransformComponent(position: Vector3(at?.x ?? 0, at?.y ?? 0, 0)),
           // A placeholder to see: swap in your sprite and controls.
-          RectangleComponent(
+          Rectangle2DComponent(
             width: 32,
             height: 48,
             fillStyle: const ShapePaintStyle(color: Color(0xFF6C8CFF)),
