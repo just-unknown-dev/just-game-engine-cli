@@ -274,7 +274,7 @@ void main() {
       );
       expect(
         check(
-          'Rocket Run MaterialApp PhysicsSystem3D',
+          'Rocket Run MaterialApp Physics3DSystem',
           natives: ['just_jolt.dll'],
         ).errors,
         hasLength(3),

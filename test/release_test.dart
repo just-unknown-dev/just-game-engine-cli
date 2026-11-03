@@ -300,10 +300,10 @@ void main() {
     });
 
     test("3D physics' code in a 2D game's build fails, naming it", () {
-      write('$release/data/app.so', 'Rocket Run MaterialApp PhysicsSystem3D');
+      write('$release/data/app.so', 'Rocket Run MaterialApp Physics3DSystem');
       expect(
         project.checkReleaseBuild('windows').errors.single,
-        contains('PhysicsSystem3D'),
+        contains('Physics3DSystem'),
       );
       write(
         'game/build/web/main.dart.js',
@@ -326,7 +326,7 @@ void main() {
 
     test('a 3D game may hold both', () {
       write('game/pubspec.yaml', 'name: game\n$jolt');
-      write('$release/data/app.so', 'Rocket Run MaterialApp PhysicsSystem3D');
+      write('$release/data/app.so', 'Rocket Run MaterialApp Physics3DSystem');
       write('$release/just_jolt.dll', '');
       final report = project.checkReleaseBuild('windows');
       expect(report.ok, isTrue);

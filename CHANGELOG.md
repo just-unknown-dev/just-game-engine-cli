@@ -1,5 +1,6 @@
 ## Unreleased
 
+- `check release-build` looks for the engine's renamed 3-D physics system (`Physics3DSystem`) in a 2-D game's release.
 - **`just game mcp`**: an MCP server for AI assistants (Claude Code, VS Code, Cursor, …), on stdin and stdout. It serves the engine as the game resolved it, so an assistant stops guessing 1.x or Flame APIs:
   - `search_docs`: keyword search over just_game_engine's guides (`doc/guides/`, from the version that ships them), the packages' README, MIGRATION and CHANGELOG, and their public API.
   - `read_doc`: a guide or note, whole or one section. `get_api`: a type or member's signature, doc comment, import, constructors, members and subtypes, with what replaces a deprecated one, read from the packages' source (export chains followed across packages).

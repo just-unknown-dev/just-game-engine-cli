@@ -52,7 +52,7 @@ final class ReleaseRules {
   /// engine. In a 2-D game's build they mean something reaches 3-D physics
   /// without a `Physics3D`.
   static const List<String> physics3DClassNames = [
-    'PhysicsSystem3D',
+    'Physics3DSystem',
     'JoltPhysicsEngine',
     'JoltWorld',
   ];

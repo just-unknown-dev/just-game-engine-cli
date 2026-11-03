@@ -21,18 +21,18 @@ void main() {
     'a project uses Flutter GPU when its code gives the engine a Graphics3D',
     () {
       expect(
-        GameTemplate.usesFlutterGpu(['EngineConfig(graphics3D: Graphics3D())']),
+        GameTemplate.usesFlutterGpu(['EngineConfig(services: [Graphics3D()])']),
         isTrue,
       );
       expect(
         GameTemplate.usesFlutterGpu([
           'a',
-          'graphics3D: Graphics3D(device: device),',
+          'services: [Graphics3D(device: device)],',
         ]),
         isTrue,
       );
       expect(
-        GameTemplate.usesFlutterGpu(['EngineConfig(physics3D: Physics3D())']),
+        GameTemplate.usesFlutterGpu(['EngineConfig(services: [Physics3D()])']),
         isFalse,
       );
       expect(

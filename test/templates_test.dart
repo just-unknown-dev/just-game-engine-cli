@@ -307,7 +307,7 @@ void main() {
           // The template brings a game that draws in 3D.
           h.write(
             'lib/game/boot3d.dart',
-            'const c = EngineConfig(graphics3D: Graphics3D());',
+            'const c = EngineConfig(services: [Graphics3D()]);',
           );
         }
         return 0;
