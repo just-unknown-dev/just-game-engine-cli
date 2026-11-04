@@ -1,5 +1,6 @@
 ## Unreleased
 
+- Requires just_game_engine_formats ^0.3.0.
 - `check release-build` looks for the engine's renamed 3-D physics system (`Physics3DSystem`) in a 2-D game's release.
 - **`just game mcp`**: an MCP server for AI assistants (Claude Code, VS Code, Cursor, …), on stdin and stdout. It serves the engine as the game resolved it, so an assistant stops guessing 1.x or Flame APIs:
   - `search_docs`: keyword search over just_game_engine's guides (`doc/guides/`, from the version that ships them), the packages' README, MIGRATION and CHANGELOG, and their public API.
@@ -9,6 +10,7 @@
 - A new game has `AGENTS.md` (how it is built, its commands, those rules), a `CLAUDE.md` that points to it, and `.mcp.json` and `.vscode/mcp.json`, which start `just game mcp`.
 - Depends on dart_mcp ^0.5.2.
 - The `empty` template draws its stand-in player with `Rectangle2DComponent`, the engine's new name for `RectangleComponent`.
+- A new game's `AGENTS.md` and the MCP server's rules say `Engine.getSystem` is gone (it was deprecated); the `empty` template's boot lists animators and timelines among the engine's standard systems.
 
 ## 0.1.4
 

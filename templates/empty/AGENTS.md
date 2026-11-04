@@ -49,7 +49,7 @@ just doctor                   # the project's setup
 
 - `Engine()` makes a new engine each call: make one and keep the reference
   (there is no `Engine.instance`). Find a subsystem with
-  `engine.subsystem<T>()`; `getSystem` is deprecated.
+  `engine.subsystem<T>()` (`Engine.getSystem` is gone).
 - Data goes in components (classes extending `Component`), logic in systems
   (`System` subclasses) that query them. One component of each type per
   entity; every shape and sprite is a `RenderableComponent`, so a second

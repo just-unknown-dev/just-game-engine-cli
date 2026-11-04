@@ -221,7 +221,7 @@ Before writing engine code, look it up: search_docs for how-tos, get_api for exa
 After changing scene files, run validate_scenes; after changing entry points, the pubspec or saved files, run check_game.
 
 Rules that trip people up:
-- `Engine()` makes a new engine each call: make one and keep the reference (there is no `Engine.instance`). Find a subsystem with `engine.subsystem<T>()`; `getSystem` is deprecated.
+- `Engine()` makes a new engine each call: make one and keep the reference (there is no `Engine.instance`). Find a subsystem with `engine.subsystem<T>()` (`Engine.getSystem` is gone).
 - Data goes in components (classes extending `Component`), logic in systems (`System` subclasses) that query them. One component of each type per entity; every shape and sprite is a `RenderableComponent`, so a second drawing goes on a child entity.
 - The world updates in fixed steps of 1/60 s: move things in `update(deltaTime)`, never by the wall clock. Systems run by priority, highest first (`SystemPriorities`), not in the order added.
 - +Y is down: gravity is +Y, a jump is -Y, a positive angle turns clockwise.
