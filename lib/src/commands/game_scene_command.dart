@@ -12,6 +12,7 @@ import 'package:meta/meta.dart';
 import '../game/game.dart';
 import '../project/project.dart';
 import '../release/release.dart';
+import 'marked_line.dart';
 
 /// `just game scene new|list|rename|delete|order|migrate|validate`.
 ///
@@ -618,10 +619,20 @@ final class _SceneValidate extends _SceneBase {
     final missing = order.where((n) => !disk.contains(n)).toList();
     for (final n in names) {
       final f = problems[n]!;
-      output.line(f.isEmpty ? 'ok  $n' : 'x   $n: ${f.join('; ')}');
+      output.line(
+        f.isEmpty
+            ? marked(output, Severity.ok, n)
+            : marked(output, Severity.problem, '$n: ${f.join('; ')}'),
+      );
     }
     for (final m in missing) {
-      output.line('x   $m is in the play order, but has no file.');
+      output.line(
+        marked(
+          output,
+          Severity.problem,
+          '$m is in the play order, but has no file.',
+        ),
+      );
     }
     output.result = {'scenes': problems, 'missing': missing};
     return problems.values.any((f) => f.isNotEmpty) || missing.isNotEmpty

@@ -12,12 +12,14 @@ import 'package:just_core_cli/just_core_cli.dart';
 /// versions travel with the commands that know them. The tools —
 /// just_core_cli and this package — are just_core_cli's [ToolSet].
 final class GameSet extends PackageSet {
-  /// The set [id], for [flutter] and [dart], holding [packages].
+  /// The set [id], for [flutter] and [dart], holding [packages]; new games
+  /// are pinned to Flutter [flutterPin].
   const GameSet({
     required super.id,
     required this.flutter,
     required this.dart,
     required super.packages,
+    this.flutterPin,
   });
 
   /// The set this version of just_game_engine_cli is made for.
@@ -25,15 +27,23 @@ final class GameSet extends PackageSet {
   /// Its id names the month it was made, as just_core_cli's [ToolSet] does:
   /// both are 2026.11 for just_core_cli 0.2.0 and just_game_engine_cli
   /// 0.2.0. A constraint on a prerelease names that prerelease
-  /// (`^0.1.0-dev.3`): a caret on a release leaves its prereleases out.
+  /// (`^0.2.0-beta.1`, as the kits below): a caret on a release leaves its
+  /// prereleases out.
   static const GameSet current = GameSet(
     id: '2026.11',
     // just_game_engine draws 3D with just_graphics_engine, which needs
-    // Flutter GPU as it is from 3.47.1 (Dart 3.12.2).
-    flutter: '>=3.47.1',
+    // Flutter GPU as it is from 3.47.1 (Dart 3.12.2). Flutter GPU is a
+    // preview: its API may change in the next minor, so 3.48 is out until
+    // the engine is tried on it.
+    flutter: '>=3.47.1 <3.48.0',
     dart: '^3.12.2',
+    // The exact Flutter each new game is pinned to ("flutter" in its
+    // just.json), and `just upgrade` moves games to. The same version is
+    // in this package's pubspec (`just: flutter:`), where just_core_cli
+    // reads it before the package is fetched; a test keeps the two equal.
+    flutterPin: '3.47.9',
     packages: [
-      SetPackage('just_game_engine', '^2.0.0-dev.4'),
+      SetPackage('just_game_engine', '^2.0.0'),
       SetPackage('just_game_engine_formats', '^0.3.0'),
       SetPackage('just_physics_engine', '^2.0.0'),
       // Box2D for the physics engine's 2D, built by default; a game
@@ -48,20 +58,20 @@ final class GameSet extends PackageSet {
       SetPackage('just_dart', '^0.3.0'),
       // The engine's 3D graphics (Graphics3D). Every game has it through
       // just_game_engine; a 2D game never makes a GPU device.
-      SetPackage('just_graphics_engine', '^0.2.0-dev.1'),
+      SetPackage('just_graphics_engine', '^0.2.0'),
       SetPackage('just_deflate', '^0.1.0'),
       SetPackage('just_audio_engine', '^2.0.0'),
       // The Asset Store: a tool, never shipped. From pub.dev, where
       // just_core_cli trusts it (PluginTrust.onPubDev, from 0.1.1).
       SetPackage('just_asset_store', '^0.3.0', dev: true),
-      // The editor, with the Asset Store's window built in from 0.1.0-dev.2:
-      // plugins and kits are added from inside it. From pub.dev, like every
+      // The editor, with the Asset Store's window built in: plugins and
+      // kits are added from inside it. From pub.dev, like every
       // package; only plugins (the kits and editor tools below) come from
       // the store.
-      SetPackage('just_game_engine_editor', '^0.1.0-dev.3', dev: true),
+      SetPackage('just_game_engine_editor', '^0.1.0', dev: true),
       // What the editor and every kit's editor side build on: it comes
       // with them, never on its own.
-      SetPackage('just_editor_core', '^0.1.0-dev.2'),
+      SetPackage('just_editor_core', '^0.1.0'),
       // The 3D kits, for games that use them (the third-person template).
       // A new 2D game doesn't get them. Editing 3D graphics is the editor's
       // own.
@@ -89,8 +99,13 @@ final class GameSet extends PackageSet {
     return null;
   }
 
-  /// The Flutter versions it needs.
+  /// The Flutter versions it works with: a range, for `just game doctor`
+  /// to check a game's Flutter against.
   final String flutter;
+
+  /// The one Flutter version games on this set are pinned to, exactly:
+  /// what `just sdk install` installs for them. Null: none pinned.
+  final String? flutterPin;
 
   /// The Dart SDK constraint games get.
   final String dart;
@@ -103,6 +118,10 @@ final class GameSet extends PackageSet {
   /// pub resolved it ([resolved]: name → version) past the set. Entries
   /// written as blocks (a git source, a path) stay too
   /// ([PubspecConstraints]).
+  ///
+  /// The game's own Flutter range (`environment: flutter:`, which pub
+  /// enforces for the game) moves to [flutter] too, either way: it goes
+  /// with the Flutter the set pins. Listed as [flutterKey].
   (String, Map<String, Map<String, String>>) bump(
     String pubspec, {
     Map<String, Version> resolved = const {},
@@ -124,8 +143,16 @@ final class GameSet extends PackageSet {
         bumps[p.name] = {'from': now, 'to': p.constraint};
       }
     }
+    final range = PubspecConstraints.of(next, 'environment', 'flutter');
+    if (range != null && range != flutter) {
+      next = PubspecConstraints.set(next, 'environment', 'flutter', flutter);
+      bumps[flutterKey] = {'from': range, 'to': flutter};
+    }
     return (next, bumps);
   }
+
+  /// How [bump] lists the game's Flutter range among what moved.
+  static const flutterKey = 'environment: flutter';
 
   /// The packages only a link to a checkout can supply when [pubspec] asks
   /// pub.dev for them by version: those of [names] this set gets from git

@@ -105,6 +105,7 @@ final class _CapturedLauncher implements Launcher {
     Map<String, String> environment = const {},
     bool toStderr = false,
     StringSink? stdout,
+    StringSink? collect,
   }) => const ProcessLauncher().run(
     executable,
     arguments,
@@ -112,5 +113,6 @@ final class _CapturedLauncher implements Launcher {
     environment: environment,
     toStderr: stdout == null,
     stdout: stdout,
+    collect: collect,
   );
 }

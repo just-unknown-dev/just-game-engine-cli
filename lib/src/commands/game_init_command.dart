@@ -134,12 +134,22 @@ final class GameInitCommand extends JustCommand {
           'Flutter was not found. Install it, put it on the PATH, or set '
           'FLUTTER_ROOT.',
         ));
+    // `just create` made the game with the Flutter the set pins, unless the
+    // user chose not to install it: then say what that means.
     final flutter = Version.tryParse(sdk.flutterVersion ?? '');
-    final floor = VersionConstraint.tryParse(set.flutter);
-    if (flutter != null && floor != null && !floor.allows(flutter)) {
+    final range = VersionConstraint.tryParse(set.flutter);
+    if (flutter != null && range != null && !range.allows(flutter)) {
+      final low = range.min;
+      final old = low != null && flutter < low;
+      final fix = set.flutterPin != null
+          ? ' Run `${context.invokedAs} sdk install ${set.flutterPin}`.'
+          : old
+          ? ' Run `flutter upgrade`.'
+          : '';
       output.warn(
-        'Flutter $flutter is older than the engine needs (${set.flutter}): '
-        'run `flutter upgrade`.',
+        'Flutter $flutter is ${old ? 'older' : 'newer'} than the engine works '
+        'with (${set.flutter}): the game may not build, or may draw '
+        'wrongly.$fix',
       );
     }
     final linked = locals.isNotEmpty;
@@ -162,39 +172,43 @@ final class GameInitCommand extends JustCommand {
             ...TemplateRenderer.dependencyLines(p, hosted: linked),
       ],
     );
-    output.info(
-      'Adding the ${fromStore || template == GameTemplate.empty ? 'game' : template} '
-      'template…',
-    );
-    // flutter create's sample test names its own app class.
-    final sample = project.file('test/widget_test.dart');
-    if (sample.existsSync()) sample.deleteSync();
-    files.forEach((path, text) => writeTextAtomic(project.file(path), text));
-    final gitignore = project.file('.gitignore');
-    writeTextAtomic(
-      gitignore,
-      GitIgnores.withDefaults(
-        GameTemplate.withEditorIgnores(
-          gitignore.existsSync() ? gitignore.readAsStringSync() : '',
-        ),
-      ),
-    );
-    final entitlements = project.file(GameTemplate.debugEntitlements);
-    if (entitlements.existsSync()) {
+    final what = fromStore || template == GameTemplate.empty
+        ? 'game'
+        : template;
+    await output.step('Adding the $what template', (_) async {
+      // flutter create's sample test names its own app class.
+      final sample = project.file('test/widget_test.dart');
+      if (sample.existsSync()) sample.deleteSync();
+      files.forEach((path, text) => writeTextAtomic(project.file(path), text));
+      final gitignore = project.file('.gitignore');
       writeTextAtomic(
-        entitlements,
-        GameTemplate.withNetworkClient(entitlements.readAsStringSync()),
+        gitignore,
+        GitIgnores.withDefaults(
+          GameTemplate.withEditorIgnores(
+            gitignore.existsSync() ? gitignore.readAsStringSync() : '',
+          ),
+        ),
       );
-    }
+      final entitlements = project.file(GameTemplate.debugEntitlements);
+      if (entitlements.existsSync()) {
+        writeTextAtomic(
+          entitlements,
+          GameTemplate.withNetworkClient(entitlements.readAsStringSync()),
+        );
+      }
+    });
 
-    output.info('Getting packages…');
-    await _must(
-      'flutter pub get',
-      context.launcher.run(
-        sdk.flutter,
-        ['pub', 'get'],
-        workingDirectory: project.root,
-        toStderr: quiet,
+    await output.step(
+      'Getting packages',
+      (collect) => _must(
+        'flutter pub get',
+        context.launcher.run(
+          sdk.flutter,
+          ['pub', 'get'],
+          workingDirectory: project.root,
+          toStderr: quiet,
+          collect: collect,
+        ),
       ),
     );
 

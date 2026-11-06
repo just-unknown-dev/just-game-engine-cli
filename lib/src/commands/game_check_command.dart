@@ -8,6 +8,7 @@ import '../game/game.dart';
 import '../project/project.dart';
 import '../release/release.dart';
 import 'flutter_target.dart';
+import 'marked_line.dart';
 
 /// `just game check [release-imports] [release-build] [formats]`: what
 /// `just check` runs for the game (release-imports and formats), and the
@@ -79,7 +80,7 @@ final class GameCheckCommand extends JustCommand {
         found = e.reachable;
         unchecked = e.reasons;
         failed = true;
-        output.line('x   ${e.message}');
+        output.line(marked(output, Severity.problem, e.message));
       }
       result['release-imports'] = {
         'entry': game,
@@ -87,10 +88,22 @@ final class GameCheckCommand extends JustCommand {
         if (unchecked.isNotEmpty) 'unchecked': unchecked,
       };
       if (found.isEmpty && unchecked.isEmpty) {
-        output.line('ok  No editor code is reachable from $game.');
+        output.line(
+          marked(
+            output,
+            Severity.ok,
+            'No editor code is reachable from $game.',
+          ),
+        );
       } else if (found.isNotEmpty) {
         failed = true;
-        output.line('x   Editor code is reachable from $game:');
+        output.line(
+          marked(
+            output,
+            Severity.problem,
+            'Editor code is reachable from $game:',
+          ),
+        );
         for (final f in found) {
           output.line('      $f');
         }
@@ -110,11 +123,17 @@ final class GameCheckCommand extends JustCommand {
         output.warn(w);
       }
       if (report.ok) {
-        output.line('ok  The $platform release build holds no editor.');
+        output.line(
+          marked(
+            output,
+            Severity.ok,
+            'The $platform release build holds no editor.',
+          ),
+        );
       } else {
         failed = true;
         for (final e in report.errors) {
-          output.line('x   $e');
+          output.line(marked(output, Severity.problem, e));
         }
       }
     }
@@ -127,21 +146,33 @@ final class GameCheckCommand extends JustCommand {
       for (final f in bad) {
         failed = true;
         output.line(
-          f.error != null
-              ? 'x   ${f.path}: ${f.error}'
-              : 'x   ${f.path} is a ${f.kind} from a newer engine (format '
-                    'v${f.version}; this one reads up to v${f.current}).',
+          marked(
+            output,
+            Severity.problem,
+            f.error != null
+                ? '${f.path}: ${f.error}'
+                : '${f.path} is a ${f.kind} from a newer engine (format '
+                      'v${f.version}; this one reads up to v${f.current}).',
+          ),
         );
       }
       for (final f in old) {
         output.line(
-          ' !  ${f.path} is in ${f.kind} format v${f.version}: it loads'
-          '${FormatsCheck.migratable.contains(f.kind) ? ', migrated as it does; `${context.invokedAs} game migrate` rewrites it in v${f.current}' : ' as it is'}.',
+          marked(
+            output,
+            Severity.warning,
+            '${f.path} is in ${f.kind} format v${f.version}: it loads'
+            '${FormatsCheck.migratable.contains(f.kind) ? ', migrated as it does; `${context.invokedAs} game migrate` rewrites it in v${f.current}' : ' as it is'}.',
+          ),
         );
       }
       if (bad.isEmpty) {
         output.line(
-          'ok  ${files.length} saved files are in formats this engine reads.',
+          marked(
+            output,
+            Severity.ok,
+            '${files.length} saved files are in formats this engine reads.',
+          ),
         );
       }
     }

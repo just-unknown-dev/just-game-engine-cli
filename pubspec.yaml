@@ -14,6 +14,13 @@ topics:
 environment:
   sdk: ^3.11.0
 
+# The Flutter every game is made with and kept on: just_core_cli reads it
+# from here (pub.dev serves the pubspec as it is) before this package is
+# fetched, and writes it into the game's just.json. GameSet.flutterPin
+# holds the same version.
+just:
+  flutter: 3.47.9
+
 dependencies:
   args: ^2.7.0
   dart_mcp: ^0.5.2

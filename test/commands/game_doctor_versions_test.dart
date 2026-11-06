@@ -56,12 +56,22 @@ void main() {
     test('Flutter and Dart against the floors the engine needs', () async {
       sdk('3.47.6', '3.12.2');
       final ok = await findings();
-      expect(ok['Flutter 3.47.6 (the engine needs >=3.47.1).'], 'ok');
+      expect(
+        ok['Flutter 3.47.6 (the engine needs ${GameSet.current.flutter}).'],
+        'ok',
+      );
       expect(ok['Dart 3.12.2 (the engine needs ^3.12.2).'], 'ok');
       sdk('3.40.0', '3.11.0');
       final found = await findings();
       expect(
-        found['Flutter 3.40.0 is too old: the engine needs >=3.47.1.'],
+        found['Flutter 3.40.0 is too old: the engine needs '
+            '${GameSet.current.flutter}.'],
+        'problem',
+      );
+      sdk('3.48.0', '3.13.0');
+      expect(
+        (await findings())['Flutter 3.48.0 is too new: the engine needs '
+            '${GameSet.current.flutter}.'],
         'problem',
       );
       expect(

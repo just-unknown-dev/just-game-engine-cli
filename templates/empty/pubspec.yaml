@@ -5,6 +5,9 @@ version: 0.1.0+1
 
 environment:
   sdk: {{dart}}
+  # The Flutter the engine is made for. pub holds the game to it, so a plain
+  # `flutter pub get` on another Flutter says so; `just upgrade` moves it.
+  flutter: "{{flutter}}"
 
 dependencies:
   flutter:

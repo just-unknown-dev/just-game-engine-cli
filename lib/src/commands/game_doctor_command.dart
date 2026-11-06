@@ -11,6 +11,7 @@ import 'package:meta/meta.dart';
 import '../game/game.dart';
 import '../project/project.dart';
 import '../release/release.dart';
+import 'marked_line.dart';
 
 /// `just game doctor`: the game's half of `just doctor` (its `doctor`
 /// hook) — the editor kept to debug builds, the game's entry point free of
@@ -42,7 +43,9 @@ final class GameDoctorCommand extends JustCommand {
     output.result = {
       'findings': [for (final f in findings) f.toJson()],
     };
-    if (findings.isEmpty) output.line('ok  Nothing to check here.');
+    if (findings.isEmpty) {
+      output.line(marked(output, Severity.ok, 'Nothing to check here.'));
+    }
     return problem ? 1 : 0;
   }
 
@@ -156,6 +159,16 @@ final class GameDoctorCommand extends JustCommand {
       environment: context.environment,
     );
     if (sdk != null) {
+      // Dart comes with Flutter: either is fixed by the Flutter it needs.
+      final pin = SdkLocator.pinOf(project.root);
+      final fix = pin != null
+          ? 'Run `${context.invokedAs} sdk install $pin` (the Flutter the '
+                'project pins).'
+          : set.flutterPin != null
+          ? 'Pin Flutter ${set.flutterPin}: set "flutter": '
+                '"${set.flutterPin}" in just.json, then run '
+                '`${context.invokedAs} sdk install`.'
+          : null;
       for (final (what, found, needs) in [
         ('Flutter', sdk.flutterVersion, set.flutter),
         ('Dart', sdk.dartVersion, set.dart),
@@ -168,14 +181,19 @@ final class GameDoctorCommand extends JustCommand {
           );
           continue;
         }
+        if (want.allows(v)) {
+          out.add(Finding(Severity.ok, '$what $v (the engine needs $needs).'));
+          continue;
+        }
+        final low = want.min;
+        final old = low != null && v < low;
         out.add(
-          want.allows(v)
-              ? Finding(Severity.ok, '$what $v (the engine needs $needs).')
-              : Finding(
-                  Severity.problem,
-                  '$what $v is too old: the engine needs $needs.',
-                  fix: 'Run `flutter upgrade`.',
-                ),
+          Finding(
+            Severity.problem,
+            '$what $v is too ${old ? 'old' : 'new'}: the engine needs '
+            '$needs.',
+            fix: fix ?? (old ? 'Run `flutter upgrade`.' : null),
+          ),
         );
       }
     }

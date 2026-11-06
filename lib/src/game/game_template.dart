@@ -64,8 +64,8 @@ abstract final class GameTemplate {
   /// [dependencies] and [devDependencies] are the pubspec lines for each
   /// section; [org] is the organisation the app ids use.
   ///
-  /// Besides [TemplateRenderer]'s own, the placeholders are `{{dart}}` (from
-  /// [set]), `{{set}}` (the tool set's id), `{{org}}`, and
+  /// Besides [TemplateRenderer]'s own, the placeholders are `{{dart}}` and
+  /// `{{flutter}}` (from [set]), `{{set}}` (the tool set's id), `{{org}}`, and
   /// `{{dependencies}}` and `{{dev_dependencies}}` (each a line of its
   /// own). Throws
   /// [ArgumentError] for a template it doesn't have, or a title with a
@@ -87,7 +87,12 @@ abstract final class GameTemplate {
       ...TemplateRenderer.render(
         files,
         names: names,
-        values: {'dart': set.dart, 'set': tools.id, 'org': org},
+        values: {
+          'dart': set.dart,
+          'flutter': set.flutter,
+          'set': tools.id,
+          'org': org,
+        },
         lines: {
           'dependencies': dependencies,
           'dev_dependencies': devDependencies,

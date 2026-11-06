@@ -11,8 +11,17 @@ import 'package:just_game_engine_cli/just_game_engine_cli.dart';
 /// One program run, as the launcher saw it.
 final class Run {
   /// [arguments] run in [workingDirectory] with [env], printing to stderr
-  /// when [toStderr].
-  Run(this.arguments, this.workingDirectory, this.env, this.toStderr);
+  /// when [toStderr]; [executable] is the program.
+  Run(
+    this.arguments,
+    this.workingDirectory,
+    this.env,
+    this.toStderr, {
+    this.executable = '',
+  });
+
+  /// The program that ran.
+  final String executable;
 
   /// The arguments.
   final List<String> arguments;
@@ -57,8 +66,17 @@ final class FakeLauncher implements Launcher {
     Map<String, String> environment = const {},
     bool toStderr = false,
     StringSink? stdout,
+    StringSink? collect,
   }) async {
-    runs.add(Run(arguments, workingDirectory, environment, toStderr));
+    runs.add(
+      Run(
+        arguments,
+        workingDirectory,
+        environment,
+        toStderr,
+        executable: executable,
+      ),
+    );
     final code = exitCodeFor?.call(arguments) ?? 0;
     if (code == 0 &&
         arguments.length >= 2 &&

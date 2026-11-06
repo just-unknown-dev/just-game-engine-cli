@@ -28,8 +28,8 @@ source is in the pub cache.
 ```text
 just game run --editor        # the game with the level editor (desktop, debug)
 just game run                 # the game
-flutter analyze               # static analysis
-flutter test                  # the tests, the scenes test included
+just flutter analyze          # static analysis
+just flutter test             # the tests, the scenes test included
 just game scene validate      # the scene files load
 just check                    # no editor code in a release; saved files current
 just doctor                   # the project's setup
@@ -68,6 +68,7 @@ just doctor                   # the project's setup
 
 ## Before you finish
 
-Run `flutter analyze` and `flutter test`; after changing a scene, run
-`just game scene validate`; after changing an entry point or the pubspec, run
-`just check`.
+Run `just flutter analyze` and `just flutter test` (the Flutter the game
+pins, in `just.json`; plain `flutter` may be another version); after
+changing a scene, run `just game scene validate`; after changing an entry
+point or the pubspec, run `just check`.
