@@ -4,7 +4,9 @@
 //     dart run example/just_game_engine_cli_example.dart [game folder]
 //
 // The rules come from the project: the editor's own packages and the tools,
-// plus every installed Asset Store item's editor-only libraries.
+// plus every installed Asset Store item's editor-only libraries. A walk that
+// could not look everywhere (no entry point, packages never fetched) proves
+// nothing, and says why.
 
 import 'dart:io';
 
@@ -16,7 +18,14 @@ void main(List<String> args) {
   stdout.writeln('Never in a release: ${rules.forbidden.join(', ')}');
 
   const entry = GameEntries.defaultGame;
-  final reachable = project.editorReachableFrom(entry, rules: rules);
+  final List<String> reachable;
+  try {
+    reachable = project.editorReachableFrom(entry, rules: rules);
+  } on ReleaseImportsUnchecked catch (e) {
+    stderr.writeln(e.message);
+    exitCode = 1;
+    return;
+  }
   if (reachable.isEmpty) {
     stdout.writeln('OK: no editor code is reachable from $entry.');
     return;

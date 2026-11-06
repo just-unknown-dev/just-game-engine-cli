@@ -9,7 +9,7 @@ import 'release_rules.dart';
 /// [ReleaseRules.forbidden] library, or the project's own `lib/editor/`,
 /// would ship the editor.
 ///
-/// `JustProject.editorReachableFrom` (the `GameProject` extension, where
+/// `JustProject.editorReachableFrom` (the `ProjectGame` extension, where
 /// `dart:io` is) walks a project on disk with it. A check of the compiled
 /// build (`JustProject.checkReleaseBuild`, `ReleaseBuild`) is the ground
 /// truth; the walk is the fast one, for tests and before a build.
@@ -37,4 +37,38 @@ abstract final class ReleaseImports {
               })
         uri,
   ];
+}
+
+/// The import walk could not look everywhere it had to, so it proves
+/// nothing: the entry point is not there, the project's packages were never
+/// fetched, or an import names a package pub did not resolve or a file that
+/// is not there.
+///
+/// `JustProject.editorReachableFrom` throws it rather than say no editor
+/// code is reachable without having looked; `just game check` and
+/// `just game build` fail with its [message].
+final class ReleaseImportsUnchecked implements Exception {
+  /// The walk from [entry] could not look where [reasons] say; it found
+  /// [reachable] on the way.
+  const ReleaseImportsUnchecked(
+    this.entry,
+    this.reasons, {
+    this.reachable = const [],
+  });
+
+  /// The entry point the walk started from, relative to the project.
+  final String entry;
+
+  /// Where it could not look, and why: one sentence each.
+  final List<String> reasons;
+
+  /// The editor code it found anyway, as `entry -> uri -> uri` trails.
+  final List<String> reachable;
+
+  /// What went unchecked, in sentences.
+  String get message =>
+      'The editor-import check of $entry proves nothing: ${reasons.join(' ')}';
+
+  @override
+  String toString() => 'ReleaseImportsUnchecked: $message';
 }

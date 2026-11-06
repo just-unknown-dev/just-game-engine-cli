@@ -13,8 +13,8 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: dart-lang/setup-dart@v1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1.8.1
       - run: dart pub get
       - run: dart analyze --fatal-infos
       # pub.dev takes points for unformatted code. (templates/ isn't Dart
@@ -22,7 +22,7 @@ jobs:
       - run: dart format --output=none --set-exit-if-changed lib bin test tool example
       - run: dart test
       # The bundled templates must be the files in templates/.
-      - run: dart run tool/bundle_templates.dart && git diff --exit-code lib/src/create/templates.g.dart
+      - run: dart run tool/bundle_templates.dart && git diff --exit-code lib/src/game/bundled_templates.g.dart
         shell: bash
       - run: dart pub publish --dry-run
         if: matrix.os == 'ubuntu-latest'
@@ -33,8 +33,8 @@ jobs:
   browser:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: dart-lang/setup-dart@v1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1.8.1
       - run: dart pub get
       - run: dart test -p chrome
       - run: dart test -p chrome -c dart2wasm

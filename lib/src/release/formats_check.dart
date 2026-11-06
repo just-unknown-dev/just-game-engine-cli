@@ -53,7 +53,7 @@ final class FormatFinding {
 
 /// The versioned files under `assets/`: scenes, timelines, animator graphs,
 /// the tag library and the physics layers. `JustProject.checkFormats()`
-/// (the `GameProject` extension, where `dart:io` is) checks every one in a
+/// (the `ProjectGame` extension, where `dart:io` is) checks every one in a
 /// project on disk.
 abstract final class FormatsCheck {
   /// The kinds `just game migrate` rewrites in the current format: those
@@ -62,7 +62,7 @@ abstract final class FormatsCheck {
   static const Set<String> migratable = {'scene', 'timeline', 'animator graph'};
 
   /// [text], a file of [kind] ([migratable]), in the current format, written
-  /// as the editor writes it, ending in a newline when [text] did. Throws
+  /// as the editor writes it and ending as [text] did ([endingAs]). Throws
   /// [ArgumentError] for a kind it can't migrate, and what the formats throw
   /// for a file they can't read.
   static String migrated(String kind, String text) {
@@ -70,15 +70,26 @@ abstract final class FormatsCheck {
     if (json is! Map<String, dynamic>) {
       throw const FormatException('Not a JSON object.');
     }
-    const pretty = JsonEncoder.withIndent('  ');
     final out = switch (kind) {
-      'scene' => pretty.convert(SceneFormat.migrate(json)),
-      'timeline' => pretty.convert(TimelineFormat.migrate(json)),
+      'scene' => SceneStarters.encode(SceneFormat.migrate(json)),
+      'timeline' => const JsonEncoder.withIndent(
+        '  ',
+      ).convert(TimelineFormat.migrate(json)),
       'animator graph' => AnimatorGraph.fromJson(json).encode(),
       _ => throw ArgumentError.value(kind, 'kind', 'Not a kind it migrates'),
     };
-    // Keep the file's own ending: a final newline if it had one.
-    return text.endsWith('\n') && !out.endsWith('\n') ? '$out\n' : out;
+    return endingAs(out, text);
+  }
+
+  /// [text] — a file's new JSON, as the formats encode it — ending as
+  /// [original], the file's text before, did: in CRLF when it used them (a
+  /// Windows checkout with `core.autocrlf`, say), and with a final newline
+  /// when it had one. A file rewritten this way changes only where its
+  /// content does.
+  static String endingAs(String text, String original) {
+    var out = text.replaceAll('\r\n', '\n');
+    if (original.endsWith('\n') && !out.endsWith('\n')) out = '$out\n';
+    return original.contains('\r\n') ? out.replaceAll('\n', '\r\n') : out;
   }
 
   /// The kind of versioned file at [path] (relative to the project, with

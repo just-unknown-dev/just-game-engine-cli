@@ -1,6 +1,6 @@
 name: just_game_engine_cli
 description: "The Just Game Engine's commands for `just` (just_core_cli): run and build games, check releases hold no editor, manage scenes and migrate saved files."
-version: 0.1.4
+version: 0.2.0
 homepage: https://github.com/just-unknown-dev/just-game-engine-cli
 repository: https://github.com/just-unknown-dev/just-game-engine-cli
 issue_tracker: https://github.com/just-unknown-dev/just-game-engine-cli/issues
@@ -17,8 +17,9 @@ environment:
 dependencies:
   args: ^2.7.0
   dart_mcp: ^0.5.2
-  just_core_cli: ^0.1.1
+  just_core_cli: ^0.2.0
   just_game_engine_formats: ^0.3.0
+  meta: ^1.15.0
 
 dev_dependencies:
   lints: ^6.0.0

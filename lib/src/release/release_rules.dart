@@ -12,7 +12,7 @@ import 'package:just_core_cli/just_core_cli.dart';
 /// packages are known, and every installed Asset Store item says in its
 /// manifest (`just_store.json`) which of its libraries are editor-only and
 /// which editor modules it has — so installing a kit guards it too.
-/// `JustProject.releaseRules()` (the `GameProject` extension, where
+/// `JustProject.releaseRules()` (the `ProjectGame` extension, where
 /// `dart:io` is) reads them from a project on disk; [ReleaseRules.forGame]
 /// makes them from the files' text, anywhere.
 final class ReleaseRules {

@@ -24,7 +24,7 @@ final class ReleaseReport {
 }
 
 /// A release build's files, as read: what [ReleaseBuild.check] judges.
-/// `JustProject.checkReleaseBuild` (the `GameProject` extension, where
+/// `JustProject.checkReleaseBuild` (the `ProjectGame` extension, where
 /// `dart:io` is) reads them from a project's `build/` folder.
 final class ReleaseBuildFiles {
   /// The [platform]'s build: its compiled Dart [code], the [natives] beside

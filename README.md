@@ -46,7 +46,9 @@ Every command takes `--json` (one JSON document on stdout, messages on stderr), 
 
 `game migrate --check` changes nothing: it fails, saying why, when a migration could not run now — while the editor has the project open, or when old files would be rewritten past a kit that has migration rules of its own (`--engine-only` goes ahead anyway). `--force` goes ahead though the editor is open. Without `--check`, an open editor stops it only when there are files to rewrite; with `--json`, its result's `migrated` lists what it rewrote.
 
-Every change these commands make goes through just_core_cli's transactions with the editor's trash (`trashRoot: '.editor_trash'`, `GameTemplate.editorTrash`): what a scene change or a migration replaces is restorable from the editor, as before.
+The commands that change a game's saved files — `game scene new|rename|delete|order|migrate` and `game migrate` — go through just_core_cli's transactions, under the project lock, with the editor's trash (`trashRoot: '.editor_trash'`, `GameTemplate.editorTrash`): all or nothing, and what they replace is restorable from the editor. Each rewritten file is written as the editor writes it and ends as it did (its line endings and final newline). `game init` and `game upgrade` write with plain atomic writes instead: they run inside `just create` and `just upgrade`, whose own transactions hold them (on its own, `game upgrade` changes one file, `pubspec.yaml`).
+
+`game check` (and `game build`, before it builds) walks the imports from the game's entry point, into the packages that can reach editor code (`.dart_tool/package_graph.json` says which). A walk that could not look — the entry point is not there, the packages were never fetched, an import names a package pub did not resolve or a file that is not there — fails, saying why, rather than report no editor code without having looked.
 
 The Asset Store is called like any plugin, under just_core_cli's trust rule: from a local checkout or the ecosystem's repositories it runs, and from pub.dev, where the game set gets it, too: just_core_cli lists its name as claimed there (`PluginTrust.onPubDev`, from just_core_cli 0.1.1); from anywhere else only once allowed in `just.json` or your user `plugins.json`, or when you say yes in a terminal.
 
@@ -60,6 +62,7 @@ import 'package:just_game_engine_cli/just_game_engine_cli.dart';
 void main() {
   final project = JustProject('.');
   final rules = project.releaseRules(); // the editor's packages + each store item's
+  // Throws ReleaseImportsUnchecked when it could not look everywhere.
   final reachable = project.editorReachableFrom('lib/main.dart', rules: rules);
   if (reachable.isNotEmpty) throw StateError('The editor would ship: $reachable');
 }
@@ -69,15 +72,18 @@ void main() {
 
 - `GameSet`: the engine's packages at versions that work together, and the Flutter and Dart they need; `bump` moves a pubspec onto them, and never moves a package that is ahead of the set back.
 - `GameTemplate` and `GameEntries`: a new game's files, and where a game and its editor start.
-- `ReleaseRules`, `ReleaseImports` and `ReleaseBuild`: what must never reach a release, the imports a source names, and the check of a release build's files (`ReleaseBuildFiles`: `windows`, `macos`, `linux` and `web`, whose JavaScript is checked, and its WebAssembly too when a `--wasm` build loads it).
-- `FormatsCheck`: a saved file against the formats this engine reads, and its migration.
-- `EditorPresence`: the editor's heartbeat, which says it has a project open.
+- `ReleaseRules`, `ReleaseImports` and `ReleaseBuild`: what must never reach a release, the imports a source names (and `ReleaseImportsUnchecked`, a walk that could not look), and the check of a release build's files (`ReleaseBuildFiles`: `windows`, `macos`, `linux` and `web`, whose JavaScript is checked, and its WebAssembly too when a `--wasm` build loads it).
+- `FormatsCheck`: a saved file against the formats this engine reads, and its migration (`migrated`, `endingAs`: rewritten as the editor writes it, ending as the file did).
 
 The just_core_cli types these take (`JustProjectFile`, `ProjectNames`, `ToolSet`, `SetPackage`, `PackageSource`, `Version`) come with the library.
 
 **Where `dart:io` is (Windows, macOS, Linux, Android, iOS)**, the library also reads a game on disk and runs the commands:
 
-- `GameProject`, an extension on `JustProject`: `releaseRules()`, `editorReachableFrom(entry)`, `checkReleaseBuild(platform)`, `devOnlyPlugins(platform)`, `checkFormats()` and `editorIsOpen()`.
-- `GameCommand` (the commands themselves) and `MigrationSafety`.
+- `ProjectGame`, an extension on `JustProject`: `releaseRules()`, `editorReachableFrom(entry)`, `checkReleaseBuild(platform)`, `devOnlyPlugins(platform)`, `checkFormats()` and `editorIsOpen()` (whether the editor's heartbeat, just_game_engine_formats' `EditorHeartbeat`, is fresh).
+- `GameCommand` (the commands themselves; its subcommands are the package's own) and `MigrationSafety`.
 
 The saved formats themselves are [just_game_engine_formats](https://pub.dev/packages/just_game_engine_formats)'; this package only calls them.
+
+## Versions and publishing
+
+Each release carries the engine's versions as its `GameSet` (0.2.0: set 2026.11, with just_core_cli's `ToolSet` 2026.11). Publish this package **last**, after every package its `GameSet` names (the engine and its packages, just_game_engine_formats, the Asset Store, the editor and its core, and the kits, which are tagged in their repositories) and after just_core_cli, whose `ToolSet` names this version: a game made with it fetches them all.

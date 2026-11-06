@@ -7,19 +7,24 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:dart_mcp/server.dart';
+import 'package:meta/meta.dart';
 
-import 'dart_api.dart';
+import 'api_index.dart';
 import 'game_knowledge.dart';
-import 'text_search.dart';
+import 'search_index.dart';
 
 /// What a `just` command run in-process gave: its exit code, its `--json`
 /// document, and what it said on stderr.
-typedef JustRun = ({int exitCode, Object? document, String messages});
+@internal
+typedef InProcessRun = ({int exitCode, Object? document, String messages});
 
-/// Runs `just` [args] on the game in-process, with `--json`.
-typedef JustRunner = Future<JustRun> Function(List<String> args);
+/// Runs `just` [args] on the game in-process, with `--json`. (Not
+/// just_core_cli's `JustRunner`: that is `just`'s command runner.)
+@internal
+typedef InProcessJust = Future<InProcessRun> Function(List<String> args);
 
 /// The MCP server: tools for the game at [GameKnowledge.projectRoot].
+@internal
 base class GameMcpServer extends MCPServer with ToolsSupport {
   /// A server on [channel] for the game [knowledge] describes; [runJust]
   /// runs its `just game` commands, and [editorOpen] says whether the
@@ -52,7 +57,7 @@ base class GameMcpServer extends MCPServer with ToolsSupport {
   final GameKnowledge knowledge;
 
   /// Runs `just game …` on the game.
-  final JustRunner runJust;
+  final InProcessJust runJust;
 
   final bool Function() _editorOpen;
 
@@ -250,8 +255,7 @@ Rules that trip people up:
       for (final n in names) {
         final p = knowledge.packages[n]!;
         final game = '${knowledge.projectRoot.replaceAll(r'\', '/')}/';
-        final where =
-            p.root.contains('/Pub/Cache/') || p.root.contains('/.pub-cache/')
+        final where = p.fromPubCache
             ? 'pub.dev'
             : 'local checkout '
                   '${p.root.startsWith(game) ? p.root.substring(game.length) : p.root}';
@@ -290,7 +294,8 @@ Rules that trip people up:
     if (hits.isEmpty) {
       return _text(
         'Nothing found for "$query". Try other words, a type name, or '
-        'read_doc with no arguments for the list of guides.',
+        'read_doc with no arguments for the list of guides.'
+        '${_unread(await knowledge.api)}',
       );
     }
     final b = StringBuffer('${hits.length} hits for "$query":\n');
@@ -380,7 +385,8 @@ Rules that trip people up:
       return _error(
         'No public API named "$symbol"'
         '${package == null ? '' : ' in $package'}.'
-        '${near.isEmpty ? ' Try search_docs.' : ' Closest: ${near.join(', ')}.'}',
+        '${near.isEmpty ? ' Try search_docs.' : ' Closest: ${near.join(', ')}.'}'
+        '${_unread(api)}',
       );
     }
     final b = StringBuffer();
@@ -511,7 +517,7 @@ Rules that trip people up:
     );
   }
 
-  String _sceneLines(JustRun run) {
+  String _sceneLines(InProcessRun run) {
     final result = _result(run.document);
     if (result is List) {
       if (result.isEmpty) return 'No scenes yet.';
@@ -528,7 +534,7 @@ Rules that trip people up:
 
   /// [run] for the assistant: ok or not, its findings or result, and what
   /// it said.
-  String _report(String command, JustRun run) {
+  String _report(String command, InProcessRun run) {
     final b = StringBuffer(
       '$command: ${run.exitCode == 0 ? 'ok' : 'problems (exit ${run.exitCode})'}\n',
     );
@@ -589,6 +595,13 @@ Rules that trip people up:
 
   static Object? _result(Object? document) =>
       document is Map ? document['result'] : null;
+
+  /// What of the API could not be read, for a lookup that found nothing:
+  /// empty when all of it was.
+  static String _unread(ApiIndex api) => api.problems.isEmpty
+      ? ''
+      : '\n\nSome of the API could not be read, so it may be missing here:\n'
+            '${api.problems.map((p) => '- $p').join('\n')}';
 
   static CallToolResult _text(String text, {bool isError = false}) =>
       CallToolResult(

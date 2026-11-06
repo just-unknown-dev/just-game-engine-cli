@@ -8,14 +8,22 @@ import 'dart:io';
 import 'dart:isolate';
 
 import 'package:just_core_cli/project.dart';
+import 'package:meta/meta.dart';
 
-import 'dart_api.dart';
-import 'text_search.dart';
+import 'api_index.dart';
+import 'search_index.dart';
 
 /// One of the game's engine packages, as pub resolved it.
+@internal
 final class EnginePackage {
-  /// [name] at [version], in [root].
-  const EnginePackage(this.name, this.version, this.root);
+  /// [name] at [version], in [root]; [fromPubCache] when pub took it from
+  /// a package server.
+  const EnginePackage(
+    this.name,
+    this.version,
+    this.root, {
+    this.fromPubCache = false,
+  });
 
   /// The package's name: `just_game_engine`.
   final String name;
@@ -25,9 +33,14 @@ final class EnginePackage {
 
   /// Its folder, with `/` between parts.
   final String root;
+
+  /// Whether it lives in pub's shared cache (from pub.dev, say), not in a
+  /// checkout ([ResolvedPackage.isInPubCache]).
+  final bool fromPubCache;
 }
 
 /// A Markdown document cut at its `## ` headings, code blocks left whole.
+@internal
 final class MarkdownDoc {
   /// [text] under [title], cut into [sections].
   MarkdownDoc(this.title, this.text) : sections = _sections(text);
@@ -94,6 +107,7 @@ final class MarkdownDoc {
 }
 
 /// A guide from `doc/guides/` of just_game_engine.
+@internal
 final class Guide {
   /// The guide at `doc/guides/[slug].md`.
   Guide(this.slug, this.section, this.summary, this.doc);
@@ -117,6 +131,7 @@ final class Guide {
 /// The engine packages a game resolved, their guides and notes, and — read
 /// in the background, as it takes a moment — their API and a search over
 /// all of it.
+@internal
 final class GameKnowledge {
   GameKnowledge._(this.projectRoot, this.packages, this.guides, this.notes) {
     final roots = {
@@ -131,9 +146,8 @@ final class GameKnowledge {
   /// in has no packages (and so no guides or API) until it has.
   factory GameKnowledge.read(String projectRoot) {
     final config = PackageConfig.read(projectRoot);
-    final ownName = _pubspecField(
+    final ownName = PubspecFields.name(
       _readText('$projectRoot/pubspec.yaml') ?? '',
-      'name',
     );
     final packages = <String, EnginePackage>{};
     for (final p in config?.packages.values ?? const <ResolvedPackage>[]) {
@@ -141,11 +155,12 @@ final class GameKnowledge {
       final root = p.rootPath
           .replaceAll(r'\', '/')
           .replaceAll(RegExp(r'/+$'), '');
-      final version = _pubspecField(
-        _readText('$root/pubspec.yaml') ?? '',
-        'version',
+      packages[p.name] = EnginePackage(
+        p.name,
+        p.declaredVersion ?? '',
+        root,
+        fromPubCache: p.isInPubCache,
       );
-      packages[p.name] = EnginePackage(p.name, version ?? '', root);
     }
     final engine = packages['just_game_engine'];
     final guides = engine == null ? <Guide>[] : _readGuides(engine.root);
@@ -209,12 +224,19 @@ final class GameKnowledge {
     return null;
   }
 
+  /// The API of the packages at [roots], read in an isolate. It never
+  /// fails: nothing listens to it until a tool asks, and an error there
+  /// would end the server. What can't be read is in [ApiIndex.problems].
   static Future<ApiIndex> _loadApi(Map<String, String> roots) async {
     try {
       return await Isolate.run(() => ApiIndex.read(roots));
     } on Object {
       // Where an isolate can't start, read it here.
-      return ApiIndex.read(roots);
+      try {
+        return ApiIndex.read(roots);
+      } on Object catch (e) {
+        return ApiIndex.unread(roots.keys, 'The API could not be read: $e');
+      }
     }
   }
 
@@ -306,14 +328,4 @@ String? _readText(String path) {
   } on FileSystemException {
     return null;
   }
-}
-
-String? _pubspecField(String yaml, String key) {
-  final m = RegExp('^$key:\\s*(.+)\$', multiLine: true).firstMatch(yaml);
-  var v = m?.group(1)?.trim();
-  if (v == null) return null;
-  if (v.contains(' #')) v = v.substring(0, v.indexOf(' #')).trim();
-  return v.length > 1 && (v.startsWith('"') || v.startsWith("'"))
-      ? v.substring(1, v.length - 1)
-      : v;
 }

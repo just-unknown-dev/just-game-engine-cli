@@ -132,6 +132,10 @@ Directory package(
   Object? store,
 }) {
   final dir = Directory('${parent.path}/$name')..createSync(recursive: true);
+  // A local checkout is a repository of its own: what just_core_cli 0.2.0
+  // trusts a path package for (one that came with the project it asks
+  // about).
+  Directory('${dir.path}/.git').createSync();
   File(
     '${dir.path}/pubspec.yaml',
   ).writeAsStringSync('name: $name\nversion: 0.1.0\n');
@@ -166,6 +170,9 @@ final class GameHarness {
   /// Environment variables beyond the defaults.
   Map<String, String> env = {};
 
+  /// What a person answers a question with, in an interactive run.
+  String answer = 'y';
+
   /// Runs `just` + [args] (`game scene list`) through the plugin's
   /// entry point, as `just` would.
   Future<int> just(List<String> args, {bool interactive = false}) =>
@@ -179,7 +186,7 @@ final class GameHarness {
     out: out,
     err: err,
     interactive: interactive,
-    readLine: () => 'y',
+    readLine: () => answer,
     environment: {'PUB_CACHE': '${project.root}/../none', ...env},
     launcher: launcher,
   );

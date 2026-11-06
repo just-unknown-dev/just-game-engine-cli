@@ -36,7 +36,7 @@ A bug report should have:
 - a clear title;
 - the command you ran (`just game …`, or the `just create`, `just check`, `just doctor` or `just upgrade` that ran it as a hook), and what you expected instead of what happened. Run it again with `--verbose` and include the output; if a script hit the problem, include its `--json` output too;
 - the output of `just --version`, `just doctor` and `flutter --version`, the version of just_game_engine_cli the project resolved (in its `pubspec.lock`), and your operating system and shell;
-- for a command that changes a project: the project's `pubspec.yaml` and `just.json`, whether the failed command left anything changed, and whether a journal was left in `.dart_tool/just_core_cli/txn/`;
+- for a command that changes a project: the project's `pubspec.yaml` and `just.json`, whether the failed command left anything changed, and whether a journal was left in `.just_changes/txn/` (just_core_cli 0.2's; 0.1 kept them in `.dart_tool/just_core_cli/txn/`);
 - for `game build` or `game check`: the platform and the full report.
 
 Not every `just` bug is this package's. `just` itself — `create`'s generic steps, plugins, pinning, `dev link`, the project toolkit — is [just_core_cli](https://github.com/just-unknown-dev/just-core-cli/issues); `store`, `add` and `remove` are [just_asset_store](https://github.com/just-unknown-dev/just-asset-store/issues)'s. A scene, timeline or animator graph that comes out of a migration wrong belongs in [just_game_engine_formats](https://github.com/just-unknown-dev/just-game-engine-formats/issues): this package only calls it. The editor that `just game run --editor` starts is `just_game_engine_editor`.
@@ -74,7 +74,7 @@ To have `just` use your checkout in a game, link the game to it: `just dev link 
 
 ## Working Against Unpublished Dependencies
 
-Besides `args`, the package depends on `just_core_cli` (the command framework and the project toolkit) and `just_game_engine_formats` (the saved formats). When a change needs an unreleased version of one, check it out next to this repository and point this package at it with a `pubspec_overrides.yaml` in the repository root:
+Besides `args`, `dart_mcp` (the MCP server) and `meta` (`@internal`), the package depends on `just_core_cli` (the command framework and the project toolkit) and `just_game_engine_formats` (the saved formats). When a change needs an unreleased version of one, check it out next to this repository and point this package at it with a `pubspec_overrides.yaml` in the repository root:
 
 ```yaml
 # pubspec_overrides.yaml: local only, never commit it.
@@ -101,40 +101,45 @@ Two kinds of code depend on this package. Every game project has it in its `dev_
 |--------|----------|
 | `bin/` | `just_plugin.dart`: the entry point `just` runs, `runJustPlugin(arguments, [GameCommand()])` |
 | `just_plugin.json` | The command `game`, and the hooks `create`, `check`, `doctor`, `upgrade`, `migrate` and `link` |
-| `lib/src/commands/` | `GameCommand` and its subcommands: `run`, `build`, `check`, `scene`, `doctor`, `upgrade`, `migrate`, and the hidden `init` and `link`; `MigrationSafety` |
-| `lib/src/create/` | `GameSet` (the engine's packages and SDK floors); `GameTemplate` (the template filled in, the runner and entitlement patches); `templates.g.dart`, generated from `templates/` |
-| `lib/src/project/` | `GameEntries` and `EditorPresence`; `GameProject`, the extension on `JustProject` that reads a game on disk for the checks |
-| `lib/src/release/` | `ReleaseRules`, `ReleaseImports`, `ReleaseBuild` and `FormatsCheck`: what `build`, `check` and `migrate` prove and rewrite, worked out from text |
-| `lib/just_game_engine_cli.dart` | The public library: the toolkit everywhere, and `src/native.dart` (the commands, `MigrationSafety`, `GameProject`) where `dart:io` is — `src/web.dart` on the web |
+| `lib/src/game/` | Web-safe. `GameSet` (the engine's packages and SDK floors); `GameTemplate` (the template filled in, the runner and entitlement patches); `bundled_templates.g.dart`, generated from `templates/`; `GameEntries` |
+| `lib/src/release/` | Web-safe. `ReleaseRules`, `ReleaseImports` (and `ReleaseImportsUnchecked`), `ReleaseBuild` and `FormatsCheck`: what `build`, `check` and `migrate` prove and rewrite, worked out from text |
+| `lib/src/project/` | `dart:io`. `ProjectGame`, the extension on `JustProject` that reads a game on disk for the checks; `MigrationSafety` |
+| `lib/src/mcp/` | `dart:io`, internal. `just game mcp`'s server (`GameMcpServer`), what it reads about the game (`GameKnowledge`), the engine's API read from source (`ApiIndex`) and the search (`SearchIndex`) |
+| `lib/src/commands/` | `dart:io`. `GameCommand` and its subcommands, one file each (`game_<name>_command.dart`, internal): `run`, `build`, `check`, `scene`, `doctor`, `upgrade`, `migrate`, `mcp`, and the hidden `init` and `link`; `flutter_target.dart`, the Flutter they run |
+| `lib/just_game_engine_cli.dart` | The public library: the `game/` and `release/` barrels everywhere, and the `commands/` and `project/` barrels where `dart:io` is — `src/web.dart` (empty) in their place on the web |
 | `templates/`, `tool/` | The bundled game template's source, and the bundler (see [below](#templates-and-the-tool-folder)) |
 | `example/` | The release-import check from a script |
-| `test/` | The tests; `test/support/fake_launcher.dart` and `test/fixtures/runners/` |
+| `test/` | The tests, mirroring `lib/src/` (`test/<folder>/`), and `test/library_layout_test.dart`; helpers in `test/support/`, runner files in `test/fixtures/runners/` |
 
 A few rules hold the package together. Keep them:
 
-- **The toolkit runs on the web.** `lib/src/create/`, `lib/src/release/`, `game_entries.dart` and `editor_presence.dart` import `package:just_core_cli/just_core_cli.dart`, never `dart:io` or `package:just_core_cli/project.dart`: they work on text, and pub.dev lists the package for the web and WebAssembly because they do. Reading the disk goes in `GameProject` (`lib/src/project/game_project.dart`), running things in the commands; both reach the library only through `src/native.dart`. `test/web_test.dart` tests the toolkit in a browser.
-- **Saved files are migrated by `just_game_engine_formats`, never here.** `game migrate`, `game scene migrate` and `game check` call `SceneFormat`, `TimelineFormat` and `AnimatorGraph`, the code the engine runs as it loads a file. Files are written as the editor writes them: JSON indented by two spaces, `SceneStarters.encode`, `SceneManifest.encode`, `AnimatorGraph.encode`. Only the kinds in `FormatsCheck.migratable` are ever rewritten.
-- **A change to a project is all or nothing.** A command that writes project files takes just_core_cli's `ProjectLock`, calls `ProjectTransaction.recover`, writes through a `ProjectTransaction`, and commits or rolls back — passing `trashRoot: GameTemplate.editorTrash` to both, so what it replaces lands in the editor's trash (just_core_cli's default is its own `.just_trash`).
-- **Not under an open editor, not without the kits' rules.** The editor holds the scenes in memory and would save over a change, so the commands that write scenes refuse while `JustProject.editorIsOpen()` (`GameProject`: the heartbeat file `.dart_tool/just_core_cli/editor.lock`, which the editor writes) unless given `--force`. `MigrationSafety` refuses to rewrite old files while an installed kit has no `migrate` hook in its `just_plugin.json`, unless given `--engine-only`.
+- **One barrel per folder, in layers.** Each top-level folder of `lib/src/` has its barrel (`game/game.dart`); only barrels and the public library export. The folders sit in layers, bottom to top: `game` and `release` (neither imports the other), then `project`, then `mcp`, then `commands`; a folder imports only its own layer or below, and no import loop crosses folders. A file no public library exports marks its declarations `@internal`. `test/library_layout_test.dart` checks all of it.
+- **The toolkit runs on the web.** `lib/src/game/` and `lib/src/release/` import `package:just_core_cli/just_core_cli.dart`, `just_game_engine_formats` and `meta`, never `dart:io`, `dart:isolate` or `package:just_core_cli/project.dart`, nor a file of the other folders: they work on text, and pub.dev lists the package for the web and WebAssembly because they do. Reading the disk goes in `ProjectGame` (`lib/src/project/project_game.dart`), running things in the commands; the public library exports their barrels only through `if (dart.library.js_interop) 'src/web.dart'`. The layout test checks it; `test/game/game_toolkit_test.dart` and `test/release/release_toolkit_test.dart` test the toolkit in a browser.
+- **Saved files are migrated by `just_game_engine_formats`, never here.** `game migrate`, `game scene migrate` and `game check` call `SceneFormat`, `TimelineFormat` and `AnimatorGraph`, the code the engine runs as it loads a file. Files are written as the editor writes them: JSON indented by two spaces, `SceneStarters.encode`, `SceneManifest.encode`, `AnimatorGraph.encode`; a rewritten file ends as it did (`FormatsCheck.endingAs`: CRLF stays CRLF, a final newline stays). Only the kinds in `FormatsCheck.migratable` are ever rewritten. `game scene migrate` writes a scene whenever its migration changed it (`SceneMigrationResult.migrated`), a current-format one included; `game migrate` rewrites the files `game check` calls old.
+- **A change to a project is all or nothing.** The scene commands and `game migrate` take just_core_cli's `ProjectLock`, call `ProjectTransaction.recover`, write through a `ProjectTransaction`, and commit or roll back — passing `trashRoot: GameTemplate.editorTrash` to both, so what they replace lands in the editor's trash (just_core_cli's default is its own `.just_trash`). `game init` and `game upgrade` write with `writeTextAtomic` and no lock: they run inside `just create` and `just upgrade`, which hold the transaction (and `just create` removes the whole folder when a step fails).
+- **A check that could not look fails.** `ProjectGame.editorReachableFrom` throws `ReleaseImportsUnchecked` when the entry point is missing, the packages were never fetched, or an import names a package pub didn't resolve or a file that isn't there; `game check` fails with its message, and `game build` warns, builds, and then checks the build (or walks the source again, for a platform whose build it can't read). It walks only the packages that can reach editor code, by `.dart_tool/package_graph.json`.
+- **A declined question is a failure with a reason.** A command that asks and is told no throws `CommandFailure('Nothing was changed: … was declined.')`, so `--json` carries the reason.
+- **Not under an open editor, not without the kits' rules.** The editor holds the scenes in memory and would save over a change, so the commands that write scenes refuse while `JustProject.editorIsOpen()` (`ProjectGame`: the heartbeat file `.dart_tool/just_core_cli/editor.lock`, which the editor writes) unless given `--force`. just_game_engine_formats' `EditorHeartbeat` is the file's one contract, its path, beat, stale rule and text, and the editor writes it through the same class: change it there, never here. `MigrationSafety` refuses to rewrite old files while an installed kit has no `migrate` hook in its `just_plugin.json`, unless given `--engine-only`.
 - **`game migrate --check` answers before `just upgrade` changes anything, and again with the new packages before it commits.** It must change nothing, and fail with the reason whenever the real run would be refused — and while the editor is open whatever the files, since the packages an upgrade fetches can bring newer formats. The real run refuses an open editor only when it has files to rewrite, exits 0 when every file is current, and says what it rewrote in its `--json` result's `migrated`. `just upgrade -- --engine-only` (or `-- --force`) passes the flag to the checks and the run alike.
 - **`game init` keeps the tools.** `just create` adds just_core_cli and this package as one-line dev dependencies; the template's pubspec must list them the same way (from `GameTemplate.directPackages`), or `just upgrade` can't move them. A test checks it.
 - **The engine's versions are this package's.** `GameSet.current` is what `game init` writes, `game doctor` checks and `game upgrade` moves to; just_core_cli's `ToolSet` holds only the tools. `game upgrade` writes one-line bumps to `pubspec.yaml` alone — never `pub get`, never the project lock: `just upgrade` runs it inside its transaction and fetches.
 - **The Asset Store's place in a game is here.** `game link` registers store items after `just dev link` and refuses `just dev unlink` while only the links supply a package (`GameSet.linkOnly`); `game doctor` checks `just_store.lock.json`'s links. The store is called through `runTrustedPlugin`.
 - **Hooks are commands.** Every hook in `just_plugin.json` names a subcommand of `game`; a test checks it. `just` passes the hooks `--json` and `--verbose` when it was given them, and `game init` gets `--title`, `--org`, `--platforms`, `--template`, `--source` and `--local` from `just create` (`--yes` only when the user gave it; the engine's set is `GameSet.current`, the tools' set the one `just.json` names).
-- **The release checks name real things.** `ReleaseRules.coreForbidden`, `coreClassNames`, `coreStrings`, `physics3DClassNames` and `physics3DStrings` are names from the editor, the tools, the engine and the physics engine that must not appear in a release build (a 2-D one, for the 3-D names). When one is renamed there, rename it here, or the check proves nothing.
+- **The release checks name real things.** `ReleaseRules.coreForbidden`, `coreClassNames`, `coreStrings`, `physics3DClassNames` and `physics3DStrings` are names from the editor, the tools, the engine and the physics engine that must not appear in a release build (a 2-D one, for the 3-D names). When one is renamed there, rename it here, or the check proves nothing: `test/release/release_names_test.dart` fails until you do (it reads the monorepo's packages beside this one, and is skipped where they aren't).
+- **The game set follows the packages.** `test/game/game_set_pins_test.dart` fails when a monorepo checkout is past its `GameSet.current` pin, and skips one still below it (released at the pin in the same round). A pin on a prerelease names that prerelease (`^0.1.0-dev.3`): a caret on a release leaves its prereleases out.
 
 ---
 
 ## Templates and the `tool/` Folder
 
-`just game init` writes a game from a bundled template; `templates/empty/` is the only one. `tool/bundle_templates.dart` compiles the templates into `lib/src/create/templates.g.dart`, each file as text with CRLF turned into LF:
+`just game init` writes a game from a bundled template; `templates/empty/` is the only one. `tool/bundle_templates.dart` compiles the templates into `lib/src/game/bundled_templates.g.dart` (an `@internal` constant), each file as text with CRLF turned into LF:
 
 ```bash
 # After any change under templates/.
 dart run tool/bundle_templates.dart
 ```
 
-Never edit `templates.g.dart` by hand, and commit it with the template change. The test `the bundled templates are the files in templates/` in `test/templates_test.dart` fails when it is out of date, and CI regenerates it and fails on any difference.
+Never edit `bundled_templates.g.dart` by hand, and commit it with the template change. The test `the bundled templates are the files in templates/` in `test/game/game_template_test.dart` fails when it is out of date, and CI regenerates it and fails on any difference.
 
 - `GameTemplate.render` fills the placeholders through just_core_cli's `TemplateRenderer`, in one pass: `{{name}}`, `{{title}}` and its escaped forms (`{{title.dart}}`, `{{title.yaml}}`, `{{title.json}}`, `{{title.xml}}`, `{{title.c}}`), `{{App}}`, plus `{{dart}}`, `{{set}}`, `{{org}}`, `{{dependencies}}` and `{{dev_dependencies}}`. They make the files invalid Dart, so a template's Dart files are named `.dart.tmpl`; the bundler drops the suffix. That keeps them away from the analyzer, `dart format` and pub.dev's score.
 - Don't add a scene, `scenes.json` or `just.json` to a template: `render` adds `assets/scenes/level_01.scene.json` from `SceneStarters.twoD` and the scene list from `SceneManifest`, and `just create` writes `just.json`.
@@ -149,14 +154,16 @@ Run every command from the repository root: the tests read `just_plugin.json`, `
 
 ```bash
 dart test
-dart test test/migrate_test.dart
+dart test test/commands/game_migrate_command_test.dart
 # The toolkit in a browser, as JavaScript and as WebAssembly (the test
 # files that need dart:io are @TestOn('vm') and skipped).
 dart test -p chrome
 dart test -p chrome -c dart2wasm
 ```
 
-CI (`.github/workflows/ci.yml`) runs `dart analyze --fatal-infos`, a `dart format` check and `dart test` on Linux, Windows and macOS, checks that `templates.g.dart` is current, runs `dart pub publish --dry-run`, and runs the browser tests in Chrome as JavaScript and WebAssembly.
+`test/` mirrors `lib/src/`: `test/<folder>/<file>_test.dart` tests `lib/src/<folder>/<file>.dart`; `test/support/` holds the helpers (`fake_launcher.dart`, `case_sensitive.dart`, `unreadable.dart`, `editor_libraries.dart`) and `test/fixtures/runners/` the runner files.
+
+CI (`.github/workflows/ci.yml`) runs `dart analyze --fatal-infos`, a `dart format` check and `dart test` on Linux, Windows and macOS, checks that `bundled_templates.g.dart` is current, runs `dart pub publish --dry-run`, and runs the browser tests in Chrome as JavaScript and WebAssembly.
 
 **No test starts Flutter, pub or a plugin.** The command tests run `runJustPlugin(args, [GameCommand()], context: ...)` on a temporary folder, with the output in `StringBuffer`s and a `FakeLauncher` (`test/support/fake_launcher.dart`) that records what would have run and plays `pub get`. `test/fixtures/runners/` holds the runner files `flutter create` 3.47.6 makes, some CRLF on purpose.
 
@@ -164,7 +171,7 @@ CI (`.github/workflows/ci.yml`) runs `dart analyze --fatal-infos`, a `dart forma
 
 ## Coding Guidelines
 
-- **Formatting.** Run `dart format lib bin test tool example`; CI fails on unformatted code. The bundler writes `templates.g.dart` already formatted.
+- **Formatting.** Run `dart format lib bin test tool example`; CI fails on unformatted code. The bundler writes `bundled_templates.g.dart` already formatted.
 - **Analysis.** `dart analyze --fatal-infos` must report no issues at all.
 - **Pure Dart.** Nothing in `lib/`, `bin/` or `tool/` may import Flutter.
 - **No direct I/O in commands.** Use `context`, `output` and `context.launcher`, never `print`, `stdout` or `Process`. Call other plugins (the Asset Store) with just_core_cli's `runTrustedPlugin`: it runs them under the trust rule every plugin command follows.
@@ -192,7 +199,7 @@ CI (`.github/workflows/ci.yml`) runs `dart analyze --fatal-infos`, a `dart forma
 ## Releasing
 
 1. Set the version in `pubspec.yaml`, and give `CHANGELOG.md` a `## <version>` section.
-2. Publish what this version needs first, in this order: `just_game_engine_formats`, then `just_core_cli` (whose `ToolSet` names this package's version), then this package — and every version `GameSet.current` names must be on pub.dev (or, for the Asset Store, tagged in its repository) before people get it.
+2. **Publish this package last.** First every version `GameSet.current` names must be on pub.dev (the kits, which come from the Asset Store, tagged in their repositories): the engine and its packages, `just_game_engine_formats`, the Asset Store, the editor and its core. `just_core_cli` goes out early, before the Asset Store, since the store and this package depend on it. Its `ToolSet` names this package's version, so `just create` from pub.dev works once this package is out. A game made with it fetches them all, so one missing breaks `just create`.
 3. From a clean checkout of `main`, with no `pubspec_overrides.yaml`: `dart pub publish --dry-run`, then `dart pub publish`.
 4. Tag `v<version>`. There are no binaries: `just` runs this package with `dart run`.
 
