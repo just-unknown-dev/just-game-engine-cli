@@ -58,7 +58,7 @@ final class GameSet extends PackageSet {
       SetPackage('just_dart', '^0.3.0'),
       // The engine's 3D graphics (Graphics3D). Every game has it through
       // just_game_engine; a 2D game never makes a GPU device.
-      SetPackage('just_graphics_engine', '^0.2.0'),
+      SetPackage('just_graphics_engine', '^0.1.0'),
       SetPackage('just_deflate', '^0.1.0'),
       SetPackage('just_audio_engine', '^2.0.0'),
       // The Asset Store: a tool, never shipped. From pub.dev, where

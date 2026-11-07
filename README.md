@@ -88,4 +88,4 @@ The saved formats themselves are [just_game_engine_formats](https://pub.dev/pack
 
 ## Versions and publishing
 
-Each release carries the engine's versions as its `GameSet` (0.2.0: set 2026.11, with just_core_cli's `ToolSet` 2026.11). Publish this package **last**, after every package its `GameSet` names (the engine and its packages, just_game_engine_formats, the Asset Store, the editor and its core, and the kits, which are tagged in their repositories) and after just_core_cli, whose `ToolSet` names this version: a game made with it fetches them all.
+Each release carries the engine's versions as its `GameSet` (0.2.1: set 2026.11, with just_core_cli's `ToolSet` 2026.11). Publish this package **last**, after every package its `GameSet` names (the engine and its packages, just_game_engine_formats, the Asset Store, the editor and its core, and the kits, which are tagged in their repositories) and after just_core_cli, whose `ToolSet` names this version: a game made with it fetches them all.

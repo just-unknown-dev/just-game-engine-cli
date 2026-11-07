@@ -1,3 +1,7 @@
+## 0.2.1
+
+- **The game set asks for just_graphics_engine ^0.1.0**, the version on pub.dev and the one just_game_engine 2.0.0 and the editor need. 0.2.0 asked for ^0.2.0, which doesn't exist: `game doctor` (and `just doctor`) warned in every game that just_graphics_engine 0.1.0 was behind the set, and `game upgrade` (and `just upgrade`) moved a game that lists it, as the third-person template does, to ^0.2.0, which pub can't resolve. The set is still 2026.11.
+
 ## 0.2.0
 
 **Publish it last**: after every version its game set names (the engine and its packages, just_game_engine_formats 0.3.0, the Asset Store 0.3.0, the editor 0.1.0 and its core 0.1.0, and the kits, tagged in their repositories) and after just_core_cli 0.2.0, whose tool set 2026.11 names this version. A game made with it fetches them all.
